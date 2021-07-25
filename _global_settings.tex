@@ -30,11 +30,8 @@
 \usepackage[
   backend=biber,
   style=ieee,
-  citestyle=numeric,
+  citestyle=numeric-comp,
   giveninits=true,
-  sorting=nyt,
-  maxbibnames=99,
-  dashed=false,
   doi=false]{biblatex}
 \DeclareFieldFormat*{title}{``#1''\newunitpunct} % move comma outside the quotation mark
 \addbibresource{references.bib}
@@ -46,6 +43,14 @@
 \usepackage{enumitem}
 
 \usepackage{hyperref}
+\hypersetup{
+  hidelinks,
+  linkcolor=blue,
+  filecolor=magenta,      
+  urlcolor=cyan,
+}
+\urlstyle{same}
+
 \renewcommand{\sectionautorefname}{\S}
 \let\subsectionautorefname\sectionautorefname
 \let\subsubsectionautorefname\sectionautorefname
@@ -97,29 +102,33 @@
 \newcommand{\intervalOL}{\interval[open left]}
 \newcommand{\intervalOR}{\interval[open right]}
 
-\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
-\SetAlgorithmName{Algorithm}{Algorithm}{Algorithm}
-\newcommand{\AlgoFontSize}{\small} % \scriptsize \footnotesize \small \normalsize
-\IncMargin{0.5em}
-\SetCommentSty{textnormal}
-\SetNlSty{}{}{:}
-\SetAlgoNlRelativeSize{0}
-\SetKwInput{KwGlobal}{Global}
-\SetKwInput{KwPrecondition}{Precondition}
-\SetKwProg{Proc}{Procedure}{:}{}
-\SetKwProg{Func}{Function}{:}{}
-\SetKw{And}{and}
-\SetKw{Or}{or}
-\SetKw{To}{to}
-\SetKw{DownTo}{downto}
-\SetKw{Break}{break}
-\SetKw{Continue}{continue}
-\SetKw{SuchThat}{\textit{s.t.}}
-\SetKw{WithRespectTo}{\textit{wrt}}
-\SetKw{Iff}{\textit{iff.}}
-\SetKw{MaxOf}{\textit{max of}}
-\SetKw{MinOf}{\textit{min of}}
-\SetKwBlock{Match}{match}{}{}
+% \usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+% \SetAlgorithmName{Algorithm}{Algorithm}{Algorithm}
+% \newcommand{\AlgoFontSize}{\small} % \scriptsize \footnotesize \small \normalsize
+% \IncMargin{0.5em}
+% \SetCommentSty{textnormal}
+% \SetNlSty{}{}{:}
+% \SetAlgoNlRelativeSize{0}
+% \SetKwInput{KwGlobal}{Global}
+% \SetKwInput{KwPrecondition}{Precondition}
+% \SetKwProg{Proc}{Procedure}{:}{}
+% \SetKwProg{Func}{Function}{:}{}
+% \SetKw{And}{and}
+% \SetKw{Or}{or}
+% \SetKw{To}{to}
+% \SetKw{DownTo}{downto}
+% \SetKw{Break}{break}
+% \SetKw{Continue}{continue}
+% \SetKw{SuchThat}{\textit{s.t.}}
+% \SetKw{WithRespectTo}{\textit{wrt}}
+% \SetKw{Iff}{\textit{iff.}}
+% \SetKw{MaxOf}{\textit{max of}}
+% \SetKw{MinOf}{\textit{min of}}
+% \SetKwBlock{Match}{match}{}{}
+
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 \usepackage{array}
 \newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
@@ -162,6 +171,9 @@
 \newcommand*{\BeforeCaptionVSpace}{1ex}
 \newcommand*{\BeforeSubCaptionVSpace}{0.75ex}
 
-%%% For example code used only
-\usepackage{lipsum} % for generating dummy text
-\newcommand{\CMD}[1]{\texttt{\string#1}} % for typing a command
+
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\etal}{\textit{et al}.}

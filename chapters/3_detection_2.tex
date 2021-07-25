@@ -1,0 +1,420 @@
+\SetPicSubDir{3_detection_2}
+\SetExpSubDir{3_detection_2}
+
+
+
+
+\chapter{Outage Detection Using Generator Dynamics} % (fold)
+\label{ch:detection_using_generator_dynamics}
+
+
+The rest of this paper is organized as follows. A unified outage detection scheme based on nonlinear power system dynamics is formulated in Section \ref{sec:formulation}. Section \ref{sec:state_estimation} then describes the PF-based online state estimation necessary for tracking generator dynamics. The proposed scheme's effectiveness and advantages are presented in Section \ref{sec:results} using simulation studies. Section \ref{sec:conclusion} is the conclusion.
+
+
+\section{Problem Formulation}
+\label{sec:formulation}
+\subsection{Power System Model}
+\label{sec:power_model}
+%%%%%%%%%%%%%%% Dynamic equations %%%%%%%%%%%%%%%
+In this section, we detail a power system model that captures both the generator dynamics and load bus power flow information in a unified framework. Consider a power system with $M$ generator buses where $\mathcal{N}_g = \{1, \dots, M\}$, $N-M$ load buses where $\mathcal{N}_l = \{M+1, \dots, N\}$, and $L$ transmission lines where $\mathcal{L} = \{1, \dots, L\}$. 
+Power system is a hybrid dynamical system described by a differential-algebraic model. The second-order generator model, also known as the swing equation \cite{Kundur1994}, is used in this work\footnote{Although the swing equation is used here to model generator rotor dynamics, high-order and more complex models, such as the two-axis model \cite{sauer2017power}, can be used. The detection scheme proposed in this work can be developed similarly.}.
+For every generator bus $i \in \mathcal{N}_g$, their states are modeled as the differential variables, i.e., $\boldsymbol{X}= [\delta, \omega]^T$ where $\delta$ is the rotor angular position in radians with respect to a synchronously rotating reference, and $\omega$ is the rotor angular velocity in radians/second. The differential equations governing their dynamics are
+\begin{subequations}
+\label{eqn:de_continuous}
+\begin{align}
+\dot{\delta}_{i} &=\omega_s\left(\omega_{i}-1\right) \,, \label{eqn:transition_function_delta}\\
+M_i \dot{\omega}_{i} &=P_{m, i}-\hat{P}_{g, i}-D_i\left(\omega_{i}-1\right) \,, \label{eqn:transition_function_omega}
+\end{align}
+\end{subequations}
+$\dot{\delta}_{i}$ is the derivative of $\delta_i$ with respect to $t$. $\omega_s$ is the synchronous rotor angular velocity such that $\omega_s= 2 \pi f_{0}$ where $f_0$ is the known synchronous frequency. $P_{m,i}, M_i$, and $D_i$ denote the mechanical power input, the inertia constant and the damping factor, respectively. They are assumed known and constant for the duration of our study. The inputs for the model are the generated active power, i.e., ${u}= P_{g}$. Under classical model assumptions, the synchronous machine is represented by a constant internal voltage $\text{E}\angle\delta$ behind its direct axis transient reactance $\text{X}_{{d}}^{\prime}$ \cite{Kundur1994}. Therefore, the active power at generator $i$ is
+\begin{equation}
+\label{eqn:ae_continuous}
+{P}_{g, i} = \frac{\text{E}_i\text{V}_i}{\text{X}_{d, i}^{'}}\sin (\delta_i - \theta_i)\,,
+\end{equation}
+where $\theta$ is the generator bus nodal voltage phase angle. The transient reactance is assumed known and constant, whereas a method will be presented later to adaptively infer the parameter $\text{E}$ with online data. Also, we denote $\hat{P}_{g, i} = P_{g, i} + \epsilon_i$ where $\epsilon$ is assumed to be a zero-mean Gaussian variable with a known variance representing the random fluctuations in electricity load on the bus as well as process noise. 
+
+%%%%%%%%%%%%%%% Measurements and power flow balance %%%%%%%%%%%%%%%
+The outputs of our system model are nodal voltage magnitudes and phase angles which PMUs can measure. More importantly, the algebraic output and generator states have to satisfy an active power balance constraint. The constraint stipulates that the net active power at a bus is the difference between the active power supplied to it by the generator and the load consumed, i.e.,
+\begin{equation}
+\label{eqn:power_balance}
+{P}_i = {P}_{g, i} - {P}_{l, i} \,,
+\end{equation}
+for $i = 1, \dots, N$, subject to a random demand fluctuation $\epsilon_i$ as mentioned above. ${P}_{l, i}$ is the load on bus $i$, ${P}_{i}$ is the nodal net active power and 
+\begin{equation}
+\label{eqn:ac_pf}
+{P}_{i} = \text{V}_i \sum_{j=1}^{N} \text{V}_j \text{Y}_{ij} \cos (\theta_i - \theta_j - \alpha_{ij}) \,,
+\end{equation} following the alternating current (AC) power flow equation where $\text{Y}_{ij}\angle\alpha_{ij}$ are elements of the bus admittance matrix. Note that for load buses ${P}_{g, i} = 0$ in (\ref{eqn:power_balance}). The total active power generated and load demand of the network are assumed to be balanced as well. This relationship will be the basis for our unified outage detection scheme described in the next section. 
+
+%%%%%%%%%%%%%%% Discrete system and measurement equations %%%%%%%%%%%%%%%
+We define the discrete counterparts of the system model via a first-order difference discretization by Euler's formula, i.e., let $\delta_{k+1} = \delta_(t_{k+1})$ for $k = 1, 2, \dots$, and $\dot{\delta}_{t_{k+1}} \approx (\delta_{k+1}-\delta_{k})/\Delta t$. For PMU devices with a sampling frequency of 30 Hz, $\Delta t = t_{k+1} - t_{k} = 1/30$ s. Thus, the continuous system of a generator bus $i$ can be approximated by
+\begin{equation}
+\label{eqn:de_discrete}
+\boldsymbol{X}_{i,k+1} = 
+\left[
+\begin{array}{c}
+\delta_{i,k+1} \\
+\omega_{i,k+1}
+\end{array}
+\right] =
+\left[
+\begin{array}{c}
+\delta_{i,k} + \Delta t \omega_s\left(\omega_{i,k}-1\right) \\
+\omega_{i,k} + \frac{\Delta t}{M_i}q_{i, k} - \epsilon_{k}\,
+\end{array}
+\right]  
+\end{equation}
+where $q_{i, k} = {P}_{m, i}-{P}_{g, i,k}-D_i\left(\omega_{i,k}-1\right)$ for notational brevity, and 
+\begin{equation}
+\label{eqn:p_g_discrete}
+{P}_{g,i,k} = \frac{\text{E}_i\text{V}_{i, k}}{\text{X}_{d, i}^{'}}\sin (\delta_{i, k} - \theta_{i,k}) \,.
+\end{equation}
+
+Taking a derivative with respect to time $t$ on both sides
+of (\ref{eqn:power_balance}) and rearranging the terms, we obtain $\partial {P}_{l, i}/\partial t = \partial {P}_{g, i}/\partial t -  \partial {P}/\partial t$, 
+relating the changes in bus load to the changes in active power generated and transferred from the bus. The discretized relationship is then
+\begin{equation}
+\label{eqn:ae_discrete}
+\Delta{P}_{l, i, k} = \Delta{P}_{g, i, k} -  \Delta{P}_{i, k}\,,
+\end{equation}
+where $\Delta{P}_{l, i, k} = {P}_{l, i, k} - {P}_{l, i, k-1}$ and similarly for the other two terms. Writing the whole system in vector form, we also define
+\begin{equation}
+\label{eqn:ae_discrete}
+\boldsymbol{Y}_{k} = \Delta\boldsymbol{P}_{l, k} =
+\left[
+\begin{array}{c}
+\Delta\boldsymbol{P}_{g, k} \\
+\boldsymbol{0}\,
+\end{array}
+\right]  - 
+\Delta\boldsymbol{P}_{k} + \boldsymbol{\eta}_k\,,
+\end{equation}
+where $\boldsymbol{\eta}$ represents the random load fluctuations and measurement error which we assume is a zero-mean Gaussian variable with covariance $\sigma^2\mathbf{I}$. The net active power change vector, i.e., $\Delta\boldsymbol{P}_{k}$, is organized such that the top $M$ entries correspond to the $M$ generator buses. 
+
+% Why is it a unified framework and how are others related
+(\ref{eqn:ae_discrete}) allows us to monitor the active power changes in both generator and load buses. In comparison, detection schemes developed in previous works focus on monitoring changes in net active power, $\Delta\boldsymbol{P}$, through direct current (DC), e.g., \cite{Chen2016}, or AC, e.g., \cite{yang2020control}, power flow equations. Their formulations can be considered as the special cases of our unified framework when no generator information is available, e.g., no PMUs are installed on generator buses. However, as we show in simulation studies, having generator power output information helps to detect certain outages when net active power changes are not significant enough to trigger an alarm.
+
+% Power system dae in state-space model framework
+(\ref{eqn:de_discrete})-(\ref{eqn:ae_discrete}) define a state-space model (SSM) for the power system that could be summarized in the general form below:
+\begin{subequations}
+\label{eqn:general_ssm}
+\begin{align}
+\boldsymbol{X}_{k+1} &= a(\boldsymbol{X}_{k}, \boldsymbol{u}_{k}, \boldsymbol{\epsilon}_{k}) \, \rightarrow f(\boldsymbol{X}_{k}|\boldsymbol{x}_{k-1}) \\ 
+\boldsymbol{Y}_{k} &= b(\boldsymbol{X}_{k}, \boldsymbol{u}_{k}, \boldsymbol{\eta}_{k}) \, \rightarrow g(\boldsymbol{Y}_{k} | \boldsymbol{x}_{k})
+\end{align}
+\end{subequations}
+In this SSM, the generator states $\boldsymbol{X}$ are not directly observable, and their dynamics are governed by the state transition function $a(\cdot)$ as in (\ref{eqn:de_discrete}). The output $\boldsymbol{Y}$ can be computed from PMU measurements as well as generator states and is governed by the output function $b(\cdot)$ as in (\ref{eqn:ae_discrete}). Note that $b(\cdot)$ is a nonlinear function of the system states; therefore, the power system is a nonlinear dynamical system. As the process is stochastic due to random load fluctuations and measurement errors, we can express the states and output in a probabilistic way. In particular, we denote the state transition density and output density as $f(\boldsymbol{X}_{k}|\boldsymbol{X}_{k-1}=\boldsymbol{x}_{k-1})$ and $g(\boldsymbol{Y}_{k} |\boldsymbol{X}_{k}=\boldsymbol{x}_{k})$, respectively, where $f(\cdot)$ and $g(\cdot)$ are probability density functions (PDFs). An important consequence of the SSM is the conditional independence of the states and output due to the Markovian structure. In particular, given $\boldsymbol{X}_{k-1}$, $\boldsymbol{X}_k$ is independent of all other previous states; similarly given $\boldsymbol{X}_{k}$, $\boldsymbol{Y}_{k}$ is independent of all other previous states.
+
+
+\subsection{Outage Detection Scheme}
+\label{sec:detection_scheme}
+% Statistical basis for outage detection
+We propose a system-wide detection scheme that utilizes the output of the SSM detailed in the previous section. Under an outage-free scenario, we expect the active power generated, transmitted, and consumed in the network are balanced with only small random load demand fluctuations. Therefore, the distribution of the system output is the basis for our outage detection scheme:
+\begin{equation}
+\label{eqn:normal_distribution}
+\boldsymbol{Y}_{k} =
+\left[
+\begin{array}{c}
+\Delta\boldsymbol{P}_{g, k} \\
+\boldsymbol{0}\,
+\end{array}
+\right]  - 
+\Delta\boldsymbol{P}_{k} + \boldsymbol{\eta}_k \sim N(\mathbf{0}, \sigma^2\boldsymbol{I}) \,.
+\end{equation}
+When a line trips in the power grid, there are two ways that the above relationship will be violated. First, the system topology changes, therefore the outage-free AC power flow equation (\ref{eqn:ac_pf}) used to compute the net active power is no longer valid\footnote{In particular, the admittance corresponding to the tripped line becomes zero, and the bus admittance matrix $Y$ changes to a new one that reflects the post-outage system topology.}. Thus $\Delta\boldsymbol{P}$ in (\ref{eqn:normal_distribution}) does not represent the actual net active power changes anymore. Second, line outage events trigger a period of transient re-balancing in the system where generators respond to the power imbalance caused by the outage. The immediately affected buses also experience an abrupt change in the net active power due to the outage. As a combination of these effects, the relationship of (\ref{eqn:normal_distribution}) will be violated. For example, using data simulated from the IEEE 39-bus test system, Fig. \ref{fig:signals_comparison} shows the contrast between the signals from a normal system and that with an outage at the 3rd second. 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{signals_comparison}}
+\caption{Comparison of the output signals with no outage and with line 12 outage. A subset of output signals significantly deviated from the normal mean level and exhibited strong non-Gaussian oscillations.}
+\label{fig:signals_comparison}
+\end{figure}
+
+% Statistical change detection via MEWMA
+Therefore, we have formulated the early outage detection problem as a multivariate process monitoring problem. The multivariate signal's deviation, $\Delta \boldsymbol{Y}$, from the expected distribution indicates an abnormal event, in this case, an outage. For its robustness to non-Gaussian data and superior performance on small to median shifts, we adopt the multivariate exponentially weighted moving average (MEWMA) control chart, initially developed by \cite{lowry1992multivariate}, for the detection task. In particular, with system outputs computed from PMU measurements and estimated generator states, $\boldsymbol{y}_k$, we construct an intermediate quantity that captures not only current but also past signal information, i.e.,
+\begin{equation}
+\label{eqn:ewma_z}
+\boldsymbol{Z}_i = \lambda \boldsymbol{y}_k + (1 - \lambda) \boldsymbol{Z}_{i-1} \,,
+\end{equation}
+where $\lambda$ is a pre-defined smoothing parameter that determines the extent of reliance on past-information and $0<\lambda \le 1$, $\boldsymbol{Z}_0 = \mathbf{0}$. The statistic under monitoring is then constructed similiar to that of a Hotelling $T^2$ statistic:
+\begin{equation}
+\label{eqn:ewma_T}
+T^2_k = \boldsymbol{Z}_k^T\Sigma_{\boldsymbol{Z}_k}^{-1}\boldsymbol{Z}_k \,,
+\end{equation}
+where the covariance matrix is 
+$$
+\Sigma_{\boldsymbol{Z}_k} = \frac{\lambda}{2 - \lambda}\left[1-(1-\lambda)^{2k}\right]\sigma^2 \,.
+$$
+An outage alarm is then triggered when the monitoring statistic crosses a pre-determined threshold, $H$, chosen to satisfy a certain sensitivity requirement:
+\begin{equation}
+\label{eqn:control_chart}
+D = \inf\lbrace k\ge1 : T^2_k \ge H \rbrace \,.
+\end{equation}
+Here $D$ is the stopping time of our outage detection scheme. The difference between $D$ and the onset time of the outage is the detection delay. Our detection scheme's prime objective is to minimize the detection delay should an outage happen at an a priori unknown location.
+
+A common way to quantify the detection scheme's sensitivity is through the so-called average run length to a false alarm ($ARL_0$), i.e., the number of samples required to produce a false alarm when the system is outage-free. MEWMA-type control chart allows system operators to specify an appropriate sensitivity level by selecting $\lambda$ and $H$. Charts with lower values of $\lambda$ are generally more robust against non-Gaussian distributions and have better detection performance for small to medium shifts \cite{montgomery2007introduction}. Given $\lambda$ and a false alarm constraint $ARL_0$, the detection threshold $H$ can be determined by solving an integral equation of Theorem 2 in \cite{rigdon1995integral}\footnote{The equation can be solved using various numerical algorithms or Markov chain approximation, and this process can be done offline. We refer interested readers to \cite{knoth2017arl} for a detailed description of the computation procedure required.}. The selection of the parameter values and their impact on the detection scheme will be presented in the case studies section. 
+% \begin{equation}
+% \label{eqn:ewma_arl}
+% L\left(0 \mid H\right)=1+\int_{0}^{H \lambda /(2-\lambda)} L\left(y \mid H\right) f\left(y \mid \mathbf{z}_{0}^{\prime} \mathbf{z}_{0}=0\right) d y \,,
+% \end{equation}
+% where $f\left(y \mid \mathbf{z}_{0}^{\prime} \mathbf{z}_{0}=0\right)$ is the p.d.f. of the chi-square distribution with a degree of freedom equal to the dimension of $\Sigma_{\boldsymbol{Z}_k}$.
+
+
+
+%%%%%%%%%%%%%%%% State Estimation %%%%%%%%%%%%%%%
+\section{Generator State Estimation}
+\label{sec:state_estimation}
+% Traditional approaches for power system state estimation
+% Why particle method
+In the previous section, we have described a unified framework of real-time system monitoring utilizing post-outage transient dynamics computed from state and algebraic variables, i.e., active power generated and net active power injection. The premise of the unified framework is the availability of accurate state and algebraic variables data. While algebraic variables can be measured by PMUs, generator states are not directly observable. This section shows how the hidden states could be reliably estimated online using a particle filter.
+
+% Introduce SE problem for SSM
+Online state estimation typically involves the inference of the posterior distribution of the hidden states $\boldsymbol{X}_k$ given a collection of output measurements $\boldsymbol{y}_{0:k}$, which we denoted by $\pi(\boldsymbol{X}_k | \boldsymbol{y}_{0:k})$. 
+% This class of marginal state inferences is also known as the filtering problem. When the system can be represented by a linear Gaussian SSM or a finite state-space hidden Markov model (HMM), the posterior distribution can be computed in an analytical form using the Kalman technique and Baum-Petrie filter. 
+For systems with nonlinear dynamics and possibly non-Gaussian noises, e.g., power system, the posterior distribution is intractable and cannot be computed in closed form.
+% Nonlinear non-Gaussian SSM
+To solve the above problem, extended and unscented Kalman filter have been extensively studied, e.g., \cite{Zhao2017,Wang2012}. However, the above methods' effectiveness becomes questionable when the underlying nonlinearity is substantial or when the posterior distribution is not well-approximated by Gaussian distribution. Instead, PF is increasingly used for this task, e.g., \cite{Cui2015}, as it handles nonlinearity well and accommodates noise of any distribution with an affordable computational cost \cite{Kadirkamanathan2002,cappe2007overview}. PFs belong to the family of sequential Monte Carlo methods where Monte Carlo samples approximate complex posterior distributions, and the distribution information is preserved beyond mean and covariance. 
+
+% Key steps in PF
+In particular, PF approximates $\pi(\boldsymbol{X}_k | \boldsymbol{y}_{0:k})$ by samples, called particles, obtained via an importance sampling procedure. Each particle is assigned an importance weight proportional to its likelihood of being sampled from the posterior distribution\footnote{This type of PF is also known as the bootstrap filter first proposed in \cite{Gordon1993}. The idea is to use the state transition density as the importance distribution in the importance sampling step. More sophisticated algorithms, such as the guided and auxiliary particle filter could be implemented in the same detection framework proposed here. However, these algorithms are, in general, more difficult to use and interpret. For details, readers can refer to \cite{doucet2009tutorial}.}. PF proceeds in a recursive prediction-correction framework. Assuming at time $k$ we have the particles and weights obtained from the previous time step, $\{(\boldsymbol{x}_{k-1}^{i}, w_{k-1}^{i})\}_{1\leq i \leq N_p}$, where $N_p$ is the number of particles, the posterior distribution at time $k-1$ is approximated by weighted Dirac delta functions as
+\begin{equation}
+\pi(\boldsymbol{X}_{k-1} | \boldsymbol{y}_{0:k-1}) \approx \sum_{i=1}^{N_{p}} w_{k-1}^{i} \cdot \delta(\boldsymbol{X}_{k-1}-\boldsymbol{x}_{k-1}^{i}) \,,
+\end{equation} where $\delta (\cdot)$ is the Dirac delta function, and the weights are normalized such that $\sum_{i=1}^{N_{p}} w_{k-1}^{i} = 1$. The algorithm starts by propagating particles from time $k-1$ to time $k$ through the state transition function in (\ref{eqn:de_discrete}), i.e., the prediction step. That means, new particles $\{\boldsymbol{x}_k^{i}\}_{1\leq i \leq N_p}$ are sampled from the state transition density $f(\boldsymbol{X}_k|\boldsymbol{x}_{k-1}^{i})$. The predicted states then have a prior distribution approximated by 
+\begin{equation}
+\label{eqn:prediction}
+\pi(\boldsymbol{X}_k | \boldsymbol{Y}_{0: k-1}) \approx \sum_{i=1}^{N_{p}} w_{k-1}^{i} \cdot \delta(\boldsymbol{X}_k-\boldsymbol{x}_k^{i}) \,.
+\end{equation}
+When the new measurement $y_k$ arrives, the prior distribution is corrected by updating the particles' weights proportional to their conditional output likelihood to obtain the posterior distribution as 
+\begin{equation}
+\label{eqn:particle_approx}
+\pi(\boldsymbol{X}_k | \boldsymbol{Y}_{0: k}) \approx \sum_{i=1}^{N_{p}} w_k^{i} \cdot \delta(\boldsymbol{X}_k-\boldsymbol{x}_k^{i}) \,,
+\end{equation} where 
+$w_k^{i} \propto  w_{k-1}^{i} \cdot g(\boldsymbol{y}_k | \boldsymbol{x}_k^{i})$.
+The intuitive interpretation is that the particles are reweighted based on their compatibility with the actual system measurement. The approximation of the posterior distribution by these particle-weight pairs is consistent as $N_p \rightarrow +\infty$ at a standard Monte Carlo rate of $\mathcal{O}(N_{p}^{-1/2})$ guaranteed by the Central Limit Theorem \cite{doucet2009tutorial}. 
+
+% How to overcome the well-known degeneracy problem
+% with systematic resampling
+A well-known problem of PF is that the weights will become highly degenerate overtime. In particular, the density approximation will be concentrated on a few particles, and all the other particles carry effectively zero weight. A common way to evaluate the extent of this degeneracy is by using the so-called Effective Sample Size (ESS) criterion \cite{liu2008monte}:
+\begin{equation}
+\text{ESS}=\left(\sum_{i=1}^{N_{p}}\left(w_k^{i}\right)^{2}\right)^{-1} \,.
+\end{equation}
+In the extreme case where one particle has the weight of 1 and all others of 0, ESS will be 1. On the other hand, ESS is $N_p$ when every particles has an equal weight of $N_p^{-1}$.
+A resampling move can be used to solve the degeneracy problem where particles with higher weights are duplicated and others removed, thus focusing computational efforts on regions of higher probability. The systematic resampling method is used in our PF as it usually outperforms other resampling algorithms \cite{doucet2009tutorial}. When ESS falls below a threshold, typically $N_p/2$, we resample $N_p$ particles from the existing ones. The number of offsprings, $N_k^{i}$, is assigned to each particle $\boldsymbol{x}_k^i$ such that $\sum_{i=1}^{N_p}N_k^{i} = N_p$. The systematic sampling proceeds as follows to select $N_k^{i}$. A random number $U_{1}$ is drawn from the uniform distribution $\mathcal{U}\left[0, {N_p}^{-1}\right]$. Then we obtain a series of ordered numbers by $U_{i}=U_{1}+\frac{i-1}{N_p}$ for $i=2, \ldots, N_p$. $N_k^{i}$ is the number of $U_{i} \in(\sum_{s=1}^{i-1} w_{s}, \sum_{s=1}^{i} w_{s}]$ where $\sum_{s=1}^{0} w_{s} := 0$ by convention. Finally, resampled particles are each assigned an equal weight $N_{p}^{-1}$ before a new round of prediction-correction recursion begins. The detailed PF algorithm with the resampling move is summarized in Algorithm \ref{alg:particle_filter}.
+% The particle filter algorithm
+\begin{algorithm}
+\caption{Particle Filter}\label{alg:particle_filter}
+\begin{algorithmic}[1]
+\For{$i = 1, \dots, N_p$}  \Comment{Initialization}
+\State Sample $\tilde{\boldsymbol{x}}_0^{i} \sim \pi_0(\boldsymbol{X})$.
+\State Compute initial importance weight
+$
+\tilde{w}_0^{i} = g(\boldsymbol{y}_0 | \tilde{\boldsymbol{x}}_0^{i}) \,.
+$
+% \State Normalize weights
+% $$
+% w_0^{i} = \frac{\tilde{w}_0^{i}}{\sum_{k=1}^{N_p}\tilde{w}_0^{k}} \,.
+% $$
+\EndFor
+\For{$k \ge 1$}
+\If{$\text{ESS} \le N_p/2$} \Comment{Systematic resampling}
+\State Draw $U_{1} \sim \mathcal{U}\left[0, {N_p}^{-1}\right]$ and obtain $U_{i}=U_{1}+\frac{i-1}{N_p}$ for $i=2, \ldots, N_p$.
+\For{$i = 1, \dots, N_p$}
+\State Obtain $N_k^{i}$ as the number of $U_i$ such that
+$$
+U_i \in \left(\sum_{s=1}^{i-1} w_{s}, \sum_{s=1}^{i} w_{s}\right] \,.
+$$ 
+\State Select $N_p$ particle indices $j_i \in \{1, \dots, N_p\}$ according to $N_k^{i}$.
+\State Set $\boldsymbol{x}_{k-1}^{i} = \tilde{\boldsymbol{x}}_{k-1}^{j_i}$, and $w_{k-1}^{i} = 1/N_p$.
+\EndFor
+\Else 
+\State Set $\boldsymbol{x}_{k-1}^{i} = \tilde{\boldsymbol{x}}_{k-1}^{i}$ for $i=1, \ldots, N_p$.
+\EndIf
+\For{$i = 1, \dots, N_p$}
+\State Propagate particles \Comment{Prediction}
+$$
+\tilde{\boldsymbol{x}}_k^{i} \sim f(\boldsymbol{X}_k|\boldsymbol{x}_{k-1}^{i}) \,.
+$$
+\State Update weight \Comment{Correction}
+$$
+\tilde{w}_k^{i} = {w}_k^{i} \times g(\boldsymbol{y}_k | \tilde{\boldsymbol{x}}_k^{i}) \,.
+$$
+\EndFor
+\State Normalize weights
+$$
+w_k^{i} = \frac{\tilde{w}_k^{i}}{\sum_{k=1}^{N_p}\tilde{w}_k^{k}} \,, \text{for } i = 1, \dots, N_p \,.
+$$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\subsection{Additional Remarks} % (fold)
+\label{ssub:additional_remarks}
+\paragraph{Limited PMU Deployment}
+Many power systems have to work with a limited number of PMUs, i.e., some buses are not equipped with a PMU. The detection scheme proposed here is also applicable in this case since the signal under monitoring, $\boldsymbol{Y}$, can be adjusted to include only buses with PMUs. In particular, $\Delta\boldsymbol{P}_{g}$ can include those generator buses with PMUs. $\Delta\boldsymbol{P}$ can be calculated for load buses with fully observable neighbor buses. The impact of an unobservable neighbor bus on the computation of the bus net active power would be an unknown term, $\text{V}_j \text{Y}_{ij} \cos (\theta_i - \theta_j - \alpha_{ij})$, in the AC power flow equation since the neighbor bus' $\theta_j$ and $\text{V}_j$ are not available. While this impact can be mitigated through a careful selection of the PMU locations, unlike \cite{Chen2016} and \cite{yang2020control}, the proposed detection scheme is effective when most generator buses are monitored, a result corroborated by our simulation study, e.g., see Fig. \ref{fig:detection_delay_distribution}. Also, the number of generator buses is typically much smaller than the total number of buses.
+
+\paragraph{Unknown System Parameter Estimation}
+We have assumed that the system parameters in the power system SSM are known and static; therefore, the PF's state estimation is reliable. In real-world applications, these parameters may be known but slow-varying due to factors like system degradation. While parameter estimation in a non-linear system is generally a difficult problem and outside the scope of this paper, there is a natural extension from the particle filtering framework that can tackle the problem. An online expectation maximization (EM) algorithm based on the particles can be implemented to learn the parameters as data arrives sequentially in real-time. The EM algorithm is an iterative optimization method that finds the maximum likelihood estimates of the parameters in problems where hidden variables are present\cite{dempster1977maximum}. This basic EM algorithm can be reformulated to perform the estimation online using the so-called sequential Monte Carlo forward smoothing framework when the complete-data density, i.e., $p_\vartheta(\boldsymbol{x}_{0:k}, {\boldsymbol{y}}_{0:k})$ where $\vartheta$ denote the set of unknown parameters, is from the exponential family \cite{yildirim2013online}.
+\end{IEEEproof}
+
+
+% % SMC-FS-based Online EM for parameter estimation
+% \subsection{Parameter estimation by online expectation maximization}
+% We have assumed that the parameters in the power system SSM are known and static; therefore, the PF's estimation is reliable. In real-world applications, these parameters may be known but slow-varying due to factors like system degradation. An online EM algorithm can be used to learn the parameters as data arrives in real-time. EM algorithm is an iterative method that finds the maximum likelihood estimate (MLE) of the parameters in problems where hidden variables are present. It was first introduced in its full generality by Dempster \etal \cite{dempster1977maximum} and has been widely used for various inference problems for its numerical stability and strong empirical performance.
+
+% % Problem description
+% Assuming the internal voltage $\text{E}$ at each bus is the parameter to learn, we denote it as $\vartheta \in \Theta$. The objective of parameter estimation in SSM is to find $\vartheta$ such that 
+% \begin{equation}
+% \vartheta = \arg\max_{\vartheta \in \Theta} p_\vartheta(y_{0:k}) \,,
+% \end{equation}
+% and $p_\vartheta({y}_{0:k}) = \int p_\vartheta(\boldsymbol{x}_{0:k}, {y}_{0:k}) d\boldsymbol{x}$, where $p_\vartheta(\boldsymbol{x}_{0:k}, {y}_{0:k})$ is the complete-data likelihood. The basic EM algorithm iterates between an expectation step (E-step) and a maximization step (M-step). Given the estimate from the $k$th iteration, $\vartheta_{k}$, the algorithm proceeds as follows:
+% \begin{itemize}
+% \item E-step: define $Q(\vartheta | \vartheta_{k})$ as the conditional expectation of the complete-data log-likelihood
+% \begin{equation}
+% Q(\vartheta | \vartheta_{k}) = \mathbb{E}_{\boldsymbol{X}_{0:k}|{y}_{0:k}, \vartheta_{k}}[\ln p_\vartheta(\boldsymbol{x}_{0:k}, {y}_{0:k})] \,.
+% \end{equation}
+% \item M-step: find $\vartheta$ that maximizes the above expectation
+% \begin{equation}
+% \vartheta_{k+1} = \arg\max_{\vartheta \in \Theta} Q(\vartheta | \vartheta_{k}) \,.
+% \end{equation}
+% \end{itemize}
+% The algorithm iterates between the two steps until the estimation has reached a stopping criterion, i.e., until convergence. The basic EM algorithm can be reformulated to perform the estimation online using the so-called SMC forward smoothing framework \cite{del2010forward,yildirim2013online}.
+
+% Since the complete-data density is in the exponential family, it can be re-parameterized in the natural form, containing natural parameters and sufficient statistics. We can rewrite $Q(\vartheta|\vartheta_{k})$ as a function of exponentially weighted sufficient statistics:
+% \begin{equation}
+% \label{eqn:recursive_Q}
+% Q(\vartheta | \vartheta_k) = \int T_k(\boldsymbol{x}_k, \vartheta_k) p_{\vartheta_{k}}(\boldsymbol{x}_{k} | y_{1:k}) d\boldsymbol{x}_{k} \,,
+% \end{equation}
+% where $T_k(\boldsymbol{x}_k, \vartheta_k)$ is defined as
+% \begin{equation}
+% \label{eqn:recursive_T}
+% \begin{split}
+% & \int \left[ (1-\gamma_k) T_{k-1}(\boldsymbol{x}_{k-1}, \vartheta_{k-1})
+% + \gamma_k s(\boldsymbol{x}_k, \boldsymbol{x}_{k-1}, \boldsymbol{y}_k) \right] \\
+% &\times p_{\vartheta_{1:k}}(\boldsymbol{x}_{k-1} | \boldsymbol{y}_{1:k-1}, \boldsymbol{x}_{k}) d\boldsymbol{x}_{k-1} \,.
+% \end{split}
+% \end{equation}
+% $s(\cdot)$ is a mapping from the complete data to the vector of sufficient statistics. $\gamma = \{\gamma_k\}_{k\ge1}$, the step-size sequence, is a positive decreasing sequence such that $\sum_{i=1}^{k} \gamma_i = \infty$ and $\sum_{i=1}^{k} \gamma_i^{2} < \infty$. A common choice of such a sequence is $\gamma_k = k^{-a}$ for $1/2 < a < 1$. The subscript $\vartheta_{1:k}$ on $p_{\vartheta_{1:k}}(\boldsymbol{x}_{k-1} | \boldsymbol{y}_{1:k-1}, \boldsymbol{x}_{k})$ indicates that these densities are computed using the estimated $\vartheta_n$ at time $n \le k$. Thus, (\ref{eqn:recursive_Q}) and (\ref{eqn:recursive_T}) define a recursive way to compute the $Q$-function with every new state-output pair.
+
+% The two densities in the recursive formulation are approximated using particle method. $p_{\vartheta_k}(\boldsymbol{x}_{k} | \boldsymbol{y}_{1:k})$ is approximated by the usual particle-weight pairs $\{ (\boldsymbol{x}_k^{i}, w_{k}^{i}) \}_{1\le i \le N_p}$ via (\ref{eqn:particle_approx}) at time $k$. Given the particles and weights $\{ (\boldsymbol{x}_{k-1}^{i}, w_{k-1}^{i}) \}_{1\le i \le N_p}$ at time $k-1$ and the propagated particles $\{\boldsymbol{x}_{k}^{i}\}_{1\le i \le N_p}$ obtained via (\ref{eqn:prediction}), we can approximate $T_k(\boldsymbol{x}_k^{i}, \vartheta_k)$ by
+% \begin{equation}
+% \label{eqn:recursive_T_pf}
+% \hat{T}_k(\boldsymbol{x}_k^{i}, \vartheta_k) = \frac{\sum_{j=1}^{N_p} w_{k-1}^{j} f_{\vartheta_k}(\boldsymbol{x}_{k}^{i} | \boldsymbol{x}_{k-1}^{j}) 
+% {V}_k}
+% {\sum_{j=1}^{N_p} w_{k-1}^{j} f_{\vartheta_k}(\boldsymbol{x}_{k}^{i} | \boldsymbol{x}_{k-1}^{j})} \,,
+% \end{equation}
+% for $i = 1, \dots, N_p$, where 
+% $$
+% V_k = (1-\gamma_k) \hat{T}_{k-1}(\boldsymbol{x}_{k-1}^{j}, \vartheta_{k-1})
+% + \gamma_k s(\boldsymbol{x}_{k-1}^{j}, \boldsymbol{x}_{k}^{i}, {y}_k) \,.
+% $$
+% Therefore, the E-step is  
+% $$
+% \hat{Q}(\vartheta | \vartheta_k) = \sum_{i=1}^{N_p} w_{k}^{i} \hat{T}_k(\boldsymbol{x}_k^{i}, \vartheta_k) \,,
+% $$
+% and the M-step is 
+% $$
+% \vartheta_{k+1} = \Lambda(\hat{Q}(\vartheta | \vartheta_n)) \,,
+% $$
+% where $\Lambda$ is a function that maps the sufficient statistics to the maximum likelihood estimator of $\vartheta$. This type of online EM could be implemented with the particle filtering algorithm described earlier to update the power system SSM parameters adaptively.
+
+
+\section{Simulation Study}
+\label{sec:results}
+\subsection{Simulation Setting}
+The proposed PF-based outage detection scheme is tested on the IEEE 39-bus 10-machine New England system\cite{athay1979practical}. System transient responses after an outage are simulated using the open-source dynamic simulation platform COSMIC \cite{Song2016}. A third-order machine model and AC power flow equations are used. We assume that the simulation results are the true generator states, and corrupted measurements are synthesized from the noise-free simulation data. For PMUs, we assume ten are installed at bus 19, 20, 22, 23, 25, 33, 34, 35, 36, and 37, covering five generator buses and their connected load buses. We also assume their sampling frequency is 30 samples per second. Each simulation runs for 10 seconds, and the outage happens at the 3rd second. A line outage is detected if the monitoring statistic crosses the detection threshold by the end of the simulation. The global constants are $f_0 = 60 $ Hz and $\omega_s = 1.0 $ p.u.. For our SSM, state function noise $\epsilon_k$ are assumed to be uncorrelated and homogeneous with a standard deviation of $0.01\% \cdot \text{P}_{g,k}$ in (\ref{eqn:de_discrete}). Output function error $\boldsymbol{\eta}_k$ are assumed to follow a zero-mean Gaussian distribution with a standard deviation of 
+$1\% \cdot (\text{P}_{g, k}- \text{P}_{k})$ in (\ref{eqn:ae_discrete}). 
+
+% % Quote: The initial conditions for the states of all generators are found by performing a load flow considering the steady state behavior of all the generators and also considering the active and reactive power data for all the buses in the IEEE 39-bus, 10-generator test system data given in Matpower toolbox [28].
+
+\subsection{Illustrative Outage Detection Example}  
+% Typical progression of monitoring statistics
+To illustrate the working of the detection scheme, we use line 18 outage as an example. Fig. \ref{fig:line_18_state_estimation_eg} shows a typical performance of the particle filter used to estimate generator states. The rotor angular speed, $\omega$, can be accurately tracked while the rotor angular position, $\delta$, has some biases after the outage. This is acceptable since we are more concerned with capturing the abnormal changes, i.e., $\Delta\delta$ and in turn $\Delta P_g$, in response to the outage rather than accurate state estimations. 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_18_state_estimation_eg}}
+\caption{State estimation result of the particle filter on $\delta$ and $\omega$ of Bus 33. The algorithm can estimate $\omega$ accurately, while the estimation of $\delta$ has biases after the outage. The changes in $\delta$ are sufficiently captured, which are more critical for the detection scheme.}
+\label{fig:line_18_state_estimation_eg}
+\end{figure}
+
+One significant advantage of the proposed detection scheme is the ability to break down the output signals and pinpoint the components leading to early detection. Fig. \ref{fig:detection_signal_breakdown} shows such a breakdown for line 18 outage. The upper two components are the generator bus information, and the lower-left one is the load bus information. They register different signal strength levels depending on the outage location, e.g., the magnitude of initial shock, the magnitude, and the transient oscillation duration. Our scheme can detect outages as long as one of them picks up significant changes. It is clear in this case that the signals from monitored load buses do not contribute meaningfully to the outage detection. Instead, the changes in generated active power and net power injection on generator buses display significant abnormal fluctuations, leading to the outage detection.
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{detection_signal_breakdown}}
+\caption{Output signals of the detection scheme for line 18 outage and its breakdown by components. Each line in the figure represents data from a bus equipped with a PMU. Abnormal disturbances in generator rather than load buses contributed to early detection in this case.}
+\label{fig:detection_signal_breakdown}
+\end{figure}
+The typical progression of the monitoring statistic, $T_{k}^2$, computed via MEWMA from the output signals is shown in Fig. \ref{fig:line_18_monitor_statistics}. Before the outage, the statistic remains close to zero. After the outage at the 3rd second, it increases rapidly and crosses the threshold. Thus, the scheme raises an outage alarm, and no detection delay is incurred. 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_18_monitor_statistics}}
+\caption{Progression of MEWMA monitoring statistic for detecting line 18 outage. After the outage onset, the monitoring statistic crosses the detection threshold immediately and remains high afterward. The outage is successfully detected with no detection delay.}
+\label{fig:line_18_monitor_statistics}
+\end{figure}
+
+\subsection{Results and Discussion} 
+This section shows the effectiveness of the proposed unified scheme using average performance computed from 1000 random simulations of each line outage. We also present a performance comparison with other state-of-the-art methods.
+
+\paragraph{Detection Rate}
+% Performance of the detection scheme under different lambda values in terms of detection delay for each line
+Fig. \ref{fig:detection_rate} presents the empirical likelihood of detection for all 35 simulated line outages, which is the percentage of successful detections over 1000 simulations. For both small and large values of $\lambda$, the detection scheme can detect 28 out of 35 outages over 90\% of the time. In some cases, we see that larger values of $\lambda$ tend to have a better detection rate, i.e., line 8, 13, 15, and 26. The reason is that these line outages produce more severe initial shock relative to their after-outage oscillation. Hence, larger values of $\lambda$ help to capture the immediate shock. Also, a small group of outages is challenging to detect regardless of the $\lambda$ value, i.e., line 2, 6, 19, 35, and 36. Diagnostic inspection of these cases' output signals reveals that they generally produce weak system disturbances, especially from the generators, hence often not triggering an outage alarm. The weak disturbance might be explained by the fact that these lines are connected to buses that serve zero or small loads. 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{detection_rate}}
+\caption{Comparison of the empirical likelihood of detection for all simulated outages under different $\lambda$s of MEWMA. While 28 out of the 35 line outages can be detected with over 90\% likelihood, larger values of $\lambda$ tend to have a higher detection rate. A small group of outages is difficult to detect regardless of the $\lambda$ value.}
+\label{fig:detection_rate}
+\end{figure}
+
+\paragraph{Detection Delay}
+The empirical distribution of the detection delays is presented in Fig. \ref{fig:detection_delay_distribution}. The figure shows the results of the proposed scheme with different $\lambda$ values and the detection scheme based on AC power flow equations from \cite{yang2020control}. Intuitively, the scheme is faster at detecting outages when the area under the curve towards the left of the figure is larger. In this case, the proposed scheme has a much higher chance of detecting outages with zero detection delay than the AC scheme. The best-performing scheme ($\lambda = 0.5$) also detects most outages within 0.2 seconds, whereas the AC scheme detects most outages within 1 second. 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{detection_delay_distribution}}
+\caption{Comparison of the empirical distribution of detection delays in seconds for the proposed unified scheme and the scheme based on AC power flow equations. The proposed scheme has a higher percentage of zero detection delays. It can detect almost all outages within 0.2 seconds, whereas the AC detection scheme does it in 1 second.}
+\label{fig:detection_delay_distribution}
+\end{figure}
+
+\paragraph{Effect of Outage Location Relative to the PMUs}
+% Overview of detection delays over different lines
+In some related and our previous studies, we observed significant variations of average detection delays for outages at different lines relative to the PMU locations. Fig. \ref{fig:boxplot_delay_pmu} shows a comparison of detection delays for outage lines with at least one PMU connected to it versus those with no PMU nearby. Since only ten buses are equipped with PMUs, most lines belong to the second group\footnote{Only a few lines in the second group are presented due to space constraints. All of those omitted line outages can be detected with zero mean detection delay, except for line 35, and 36, which are often undetected.}. While outages at line 11 and 19 are often detected with 0.1-second delay, most outages are detected immediately regardless of the relative position to the PMUs. Line 11 connects to the slack bus, and its outage creates a minimal disturbance in all three output channels. This result demonstrates the spatial advantage of the proposed method and its robustness to the outage locations.
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{boxplot_delay_pmu}}
+\caption{Box plot of the empirical distributions of detection delays in seconds for lines with at least 1 PMU nearby and those without a PMU. }
+\label{fig:boxplot_delay_pmu}
+\end{figure}
+
+
+\paragraph{Comparison with Other Methods}
+%% Comparison of detection delays with other methods
+We compare the proposed method's performance with three other methods in Table \ref{tab:delay_comparison_39}. The chosen outages are, in general, more difficult to detect. The first method for comparison is based on the DC power flow model from \cite{Chen2016} and the second based on subspace identification from \cite{Hosur2019}. Both of them are tested using a full PMU deployment. The third is from our previous work that relies on the AC power flow model where 10 PMUs are assumed to be installed at locations used in \cite{yang2020control}. The thresholds for all methods are selected by satisfying a false alarm constraint of 1 in 30 days. The average detection delays and their standard deviations are computed from 1000 random simulations, while a dash means a missed detection. The method proposed, ``Unified'', is consistently faster at detecting outages than the other methods.
+\begin{table}
+\caption{Detection Delay Comparison of Different Detection Schemes}
+\label{tab:delay_comparison_39}
+\centering
+\begin{tabular}{r|llll} 
+\hline
+\hline
+\multicolumn{1}{l|}{}     & \multicolumn{4}{c}{Average Detection Delay (s.d.)}  \\ \hline
+\multicolumn{1}{c|}{Line} & DC (full) & Subspace (full)  & AC &  Unified \\ \hline
+2 & 1.165 (0.006)   & 2.822 (1.924) & 0.283 (0.263) & \textbf{0.012} (0.183) \\
+6 & \textendash     & 3.060 (2.011) & 0.246 (0.129) & \textbf{0.052} (0.463) \\
+11& \textbf{0} (0)  & 3.048 (1.969) & 0.602 (0.205) & 0.058 (0.077) \\
+15& \textbf{0} (0)  & 2.634 (1.850) & 0.005 (0.034) & \textbf{0} (0) \\
+19& \textendash     & 2.836 (2.018) & 0.335 (0.378) & \textbf{0.160} (0.315) \\
+26& \textendash     & 2.850 (1.958)  & 0.385 (0.228) & \textbf{0} (0)      \\
+\hline          
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+\label{sec:conclusion}
+We have proposed a unified framework of online transmission line outage detection utilizing information from both generator machine states and load bus algebraic variables. The signals are obtained through nonlinear state estimation of particle filters and direct measurements of PMUs. They are effectively used for outage monitoring and detection by MEWMA control charts while meeting a particular false alarm criterion. The approach is shown to be quicker at detecting outages and more robust to a priori unknown outage locations under a limited PMU deployment through an extensive simulation study. Further research can be done to improve the detection scheme's effectiveness by investigating the optimal location of limited PMUs given a network of power stations. Also, we observed a group of lines that are consistently difficult to detect regardless of the detection schemes or parameter designs used. More work needs to be done in this area so that detection blind spots could be significantly reduced. 
+
+
+
+
+
+
+
+
+% section outage_detection_using_generator_dynamics (end)

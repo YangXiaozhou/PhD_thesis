@@ -92,9 +92,9 @@
 
 \LoadClass{memoir}
 
-\setlrmarginsandblock{1.2in}{*}{*}
+\setlrmarginsandblock{1.5in}{*}{*}
   \@tempdima=1in  \advance\@tempdima 25pt \advance\@tempdima\normalbaselineskip
-  \@tempdimb=.75in  \advance\@tempdimb 30pt
+  \@tempdimb=1in  \advance\@tempdimb 30pt
 \setulmarginsandblock{\@tempdima}{\@tempdimb}{*}
 
 \AtBeginDocument{\checkandfixthelayout}
@@ -243,24 +243,24 @@
 
   \begin{center}
     \blocklt{\@title}\par
-    \vspace{14pt minus 4pt}
+    \vspace{36pt minus 4pt}
     by \par
     \blocklt{\@author}
     \ifdefined \@prevdegrees
       \par\vspace{-10pt}\textit{(\@prevdegrees)}
     \fi\par
-    \vspace{28pt minus 8pt}
+    \vspace{36pt minus 8pt}
     \blocklt{A thesis submitted for the degree of} \par
     \blocklt{\@degree}\par
-    in \par
-    \blocklt{\@field}\par
+    % in \par
+    % \blocklt{\@field}\par
     in the \par
-    \blocklt{Graduate Division} \par
-    of the \par
+    \blocklt{DEPARTMENT OF INDUSTRIAL SYSTEMS ENGINEERING AND MANAGEMENT} \par
+    \par
     \blocklt{National University of Singapore} \par
-    \vspace{28pt minus 8pt}
+    % \vspace{14pt minus 8pt}
     \blocklt{\@degreeyear} \par
-    \vspace{14pt minus 4pt}
+    \vspace{36pt minus 4pt}
     \ifdefined \@cosupervisor
       Supervisors: \par\vspace{-10pt}
       {\@supervisor}, Main Supervisor \\
