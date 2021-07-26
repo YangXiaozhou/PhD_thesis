@@ -92,7 +92,7 @@
 
 \LoadClass{memoir}
 
-\setlrmarginsandblock{1.5in}{*}{*}
+\setlrmarginsandblock{1.3in}{*}{*}
   \@tempdima=1in  \advance\@tempdima 25pt \advance\@tempdima\normalbaselineskip
   \@tempdimb=1in  \advance\@tempdimb 30pt
 \setulmarginsandblock{\@tempdima}{\@tempdimb}{*}
