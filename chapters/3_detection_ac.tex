@@ -1,0 +1,514 @@
+\SetPicSubDir{3_detection_ac}
+\SetExpSubDir{3_detection_ac}
+
+\chapter{Outage Detection Using Approximate Dynamics}
+\label{ch:detection_using_approximate_dynamics}
+\vspace{2em}
+
+\section{Introduction} % (fold)
+\label{ch3:sec:introduction}
+
+% section introduction (end)
+In this chapter, an outage detection scheme making use of approximate transient dynamics is proposed\footnote{This chapter is based on the paper: X. Yang, N. Chen, and C. Zhai, “A control chart approach to power system line outage detection under transient dynamics”, \textit{IEEE Transactions on Power Systems}, vol. 36, no. 1, pp. 127–135, 2021.}. The scheme represents a novel hybrid approach to outage detection where a power system model is the basis for the statistical detection method. A time-variant small-signal relationship between net active power and nodal voltage phase angles is derived from the AC power flow model. Outage detection is then formulated as a statistical distribution change detection problem. A generalized likelihood ratio (GLR) detection scheme is implemented to detect the outage at a pre-specified false alarm rate. 
+
+The main contributions of this research work can be summarized in two aspects. Firstly, the power system model retains the non-linear and time-varying characteristics of system transient response that follows after the outage. The system is not assumed to be in a quasi-steady state immediately after the disruption like in many existing methods. From the dynamic outage simulation, it is observed that the transient response could last over 10 seconds. Secondly, the proposed GLR detection scheme can deal with the trade-off between system-wide false alarm rate and detection delay. The ability to decide among different detection thresholds gives operators the flexibility to cater to their system needs. The detection scheme is also computationally efficient, therefore suitable for online implementation in a large network.
+
+The remainder of this chapter is organized as follows. Section \ref{ch3:sec:formulation} describes the power system model and the statistical model used to characterize system behaviors before and after the outage. Then, dynamic detection scheme is developed in Section \ref{ch3:sec:detection_scheme}. Effectiveness of the proposed scheme on simulation data of two test power systems are reported and discussed in Section \ref{ch3:sec:results}. Section \ref{ch3:sec:conclusion} concludes this work with two further research directions.
+
+
+\section{Problem Formulation}
+\label{ch3:sec:formulation}
+
+%%%%%%%%%%%%%%% Power System Model %%%%%%%%%%%%%%%
+\subsection{Power System Model}
+\label{ch3:sec:power_model}
+
+Given a power system with $N$ buses connected by $L$ transmission lines as mentioned in Section \ref{ch2:sec:ps_model}. Without the loss of generality, bus 1 is assumed to be the reference bus. This bus serves as the angular reference to all other buses, and its phase angle is set to $0^\circ$. The voltage magnitude at the reference bus is also set to $1.0$ per unit (p.u.). Let \textbf{P}, \textbf{Q}, $\boldsymbol{\theta}$, and \textbf{V} represent the $(N-1)$-dimensional column vectors of net active power, net reactive power, voltage angles and magnitudes respectively at all buses except the reference bus. Taking a derivative with respect to time $t$ on both sides of the AC power flow model of (\ref{ch2:eqn:AC_power_flow_model}), then
+\begin{equation}
+\label{ch3:eqn:ac_jacobian}
+\left[\begin{array}{c} \frac{\partial \textbf{P}}{\partial t} \\[.5em] \frac{\partial \textbf{Q}}{\partial t}\end{array}\right]
+=
+\left[\begin{array}{c|c}
+{J}_1 & {J}_2 \\
+ \hline {J}_3 & {J}_4 
+ \end{array}\right] 
+\cdot \left[\begin{array}{c} \frac{\partial \boldsymbol{\theta}}{\partial t} \\[.5em] \frac{\partial \textbf{V}}{\partial t}\end{array}\right] \,,
+\end{equation}
+where ${J}_i, i = 1, \dots, 4$ are the four submatrices of the AC power flow Jacobian with 
+\begin{equation}
+{J}_1 = \frac{\partial \textbf{P}}{\partial \boldsymbol{\theta}} \,,  {J}_2 = \frac{\partial \textbf{P}}{\partial \mathbf{V}} \,, {J}_3 = \frac{\partial \textbf{Q}}{\partial \boldsymbol{\theta}} \,, {J}_4 = \frac{\partial \textbf{Q}}{\partial \textbf{V}} \,.
+\end{equation}
+In the usual operating range of relatively small angles, real power systems exhibit much stronger interdependences between \textbf{P} and $\boldsymbol{\theta}$ and between \textbf{Q} and \textbf{V} than those between \textbf{P} and \textbf{V} and between \textbf{Q} and $\boldsymbol{\theta}$ \cite{murty2017power}. By neglecting ${J}_2$ and ${J}_3$, (\ref{ch3:eqn:ac_jacobian}) reduces to the decoupled AC power flow equations where the changes in voltage angles and magnitudes are not coupled, i.e. 
+$$
+{J}_2 = {J}_3 = \mathbf{0}.
+$$
+Therefore, a small-signal time-variant model describing the relationship between active power mismatches and the changes in voltage angles is obtained: 
+\begin{equation}
+\label{ch3:eqn:ac_decoupled_jacobian}
+\frac{\partial \textbf{P}}{\partial t} \approx {J}_1(\boldsymbol{\theta}) \frac{\partial \boldsymbol{\theta}}{\partial t}\,.
+\end{equation}
+From here onwards, the subscript $1$ is dropped from ${J}_1$. The off-diagonal and diagonal elements of the ${J}$ matrix can be derived from (\ref{ch2:eqn:AC_power_flow_P}) respectively:
+\begin{subequations}
+\label{ch3:eqn:elements_J}
+\begin{align}
+    \frac{\partial \text{P}_{m}}{\partial \theta_{n}} 
+    & = \text{V}_{m} \text{V}_{n} \text{Y}_{m n} \sin \left( \theta_{m} - \theta_{n} - \alpha_{m n} \right) \,,  m \neq n \,,\label{ch3:eqn:elements_J_off}\\ 
+    \frac{\partial \text{P}_{m}}{\partial \theta_{m}} 
+    & = -\sum_{ n=1 \atop n \neq m}^{N} \text{V}_{m} \text{V}_{n} \text{Y}_{m n} \sin \left( \theta_{m} - \theta_{n} - \alpha_{m n} \right) \,. \label{ch3:eqn:elements_J_diag} 
+\end{align}
+\end{subequations}
+Note that $t \in [0, \infty)$ is implicit in the continuous-time quantities $\textbf{P}, \textbf{V}$ and $\boldsymbol{\theta}$. Accordingly, their discrete counterparts are defined as $\textbf{P}_k, \textbf{V}_k$ and $\boldsymbol{\theta}_k$ at time $t_k$ for $k = 1, 2, \dots$. For PMU devices with a sampling frequency of 30 Hz, 
+$$
+\Delta t = t_{k} - t_{k-1} = 1/30 \,s \,.
+$$  
+A first-order difference discretization by Euler's formula can approximate (\ref{ch3:eqn:ac_decoupled_jacobian}) by:
+\begin{equation}
+\label{ch3:eqn:small_signal_model}
+    \Delta \textbf{P}_k =  {J}(\boldsymbol{\theta}_{k-1}) \Delta \boldsymbol{\theta}_k \,,
+\end{equation}
+where 
+$$
+\Delta \textbf{P}_k = \textbf{P}_k - \textbf{P}_{k-1}
+$$
+and 
+$$
+\Delta \boldsymbol{\theta}_k = \boldsymbol{\theta}_k - \boldsymbol{\theta}_{k-1} \,,
+$$
+i.e. the active power mismatch and difference between two consecutive angle measurements. A time-variant relationship between variations in phasor angles and net active power on buses is derived. 
+% Our contribution: dynamic modeling
+The key feature of the proposed model lies in the ${J}$ matrix in (\ref{ch3:eqn:small_signal_model}). The matrix changes with $\boldsymbol{\theta}$, which in turn changes with time. Therefore, it retains the non-linear and dynamic nature of the AC power system.  
+
+Methods relying on a static relationship between $\Delta\textbf{P}$ and $\Delta\boldsymbol{\theta}$ make three further assumptions about the system \cite{Tate2008, Chen2016}: (1) system operates with a flat voltage profile, i.e. 
+$$
+\text{V}_m \approx \text{V}_n \approx 1.0 \, \text{p.u.} \,,
+$$
+(2) and with approximately homogeneous bus angles across the network, i.e. 
+$$
+\cos(\theta_m - \theta_n) \approx 1, \sin(\theta_m - \theta_n) \approx 0 \,,
+$$ 
+(3) the reactive property of a line is much more significant than its resistive property, i.e. 
+$$
+B_{mn} \gg G_{mn} \,,
+$$ 
+for $m, n \in \mathcal{N}$. Under these assumptions, (\ref{ch3:eqn:ac_decoupled_jacobian}) reduces to
+\begin{equation}
+\label{ch3:eqn:dc_power_flow}
+\frac{\partial \textbf{P}}{\partial t} \approx -\mathbf{B} \frac{\partial \boldsymbol{\theta}}{\partial t} \,,
+\end{equation}
+where $\mathbf{B}$ is the imaginary component of $\boldsymbol{Y}_{bus}$. 
+This is obtained by applying the assumptions and using (\ref{ch2:eqn:admittance_expression}) to write (\ref{ch3:eqn:elements_J_off}) as
+\begin{eqnarray}
+\label{ch3:eqn:elements_B_off}
+  \frac{\partial \text{P}_{m}}{\partial \theta_{n}} 
+  & = & \text{Y}_{m n} \left( \sin \theta_{mn} \cos \alpha_{mn}  - \cos \theta_{mn} \sin \alpha_{mn} \right) \,, \nonumber\\
+  & = & G_{m n}\sin \theta_{mn}  - B_{mn} \cos \theta_{mn} \,, \nonumber\\
+  & \approx & - B_{mn} \,,
+\end{eqnarray}
+for $m \neq n$. Similarly,  
+\begin{equation}
+\label{ch3:eqn:elements_B_diag}
+\frac{\partial \text{P}_{m}}{\partial \theta_{m}} \approx \sum_{ n=1, n \neq m}^{N} B_{mn} \,.
+\end{equation} 
+Putting the elements in (\ref{ch3:eqn:elements_B_off}) and (\ref{ch3:eqn:elements_B_diag}) together, the relationship (\ref{ch3:eqn:dc_power_flow}) is obtained. 
+While line resistances in transmission systems are generally one order of magnitude smaller than reactances, this is not usually the case for distribution systems \cite{anderson1983stability}. Also, a static model may not be accurate enough to reflect the transient behavior after an outage since the homogeneous angles assumption might be violated \cite{kaye1984analysis}. This phenomenon is routinely encountered in dynamic simulation. For example, in Fig. \ref{ch3:fig:severe_transients}, the balance between voltage angles is severely distorted following an outage, e.g., at around $t = 3.75$ s.
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{transients}}
+\caption{\textit{The progression of bus voltage phase angles after an outage at $t=3$ s, where each line corresponds to one bus. The steady-state bus angle balance is severely distorted during the transient response phase.}}
+\label{ch3:fig:severe_transients}
+\end{figure}
+Furthermore, the duration of transient dynamics is non-negligible for real-time detection purposes. Therefore, to reflect the dynamic behavior in a timely and accurate manner, ${J}$ matrix in (\ref{ch3:eqn:small_signal_model}) is updated by real-time streaming PMU data.
+
+%%%%%%%%%%%%%%% Statistical Model %%%%%%%%%%%%%%%
+\subsection{Statistical Model}
+\label{ch3:sec:statistical_model}
+% Establish the distribution of theta
+For a balanced steady-state power system with no active power mismatch, it can be assumed $\textbf{P}_{0} = \mathbf{0}$. Within a short period of time, net active power fluctuates around zero as the generators respond to random changes in electricity demand. Therefore, the trajectory of $\textbf{P}$ can be modeled as a Brownian motion with drift $\boldsymbol{0}$ and variance $\sigma^2 t \mathbf{I}$ which is a continuous-time stochastic process: 
+$$
+\{\textbf{P}_t: t \in [0, \infty)\} \,.
+$$ 
+$\sigma^2$ is pre-determined and $\mathbf{I}$ is an identity matrix of appropriate dimension. One of the implications of a Brownian motion is that their independent increment, i.e. 
+$$
+\Delta\textbf{P}_k = \textbf{P}_{t_k} - \textbf{P}_{t_{k-s}} \,,
+$$ follows a multivariate Gaussian distribution with mean $\boldsymbol{0}$ and variance $\sigma^2(t_k - t_{k-s})\mathbf{I}$ \cite{cox2017theory}. In particular, taking $s = 1$, then 
+$
+t_{k} - t_{k-s} = \Delta t
+$ and 
+\begin{equation}
+\Delta\textbf{P}_k \sim \mathcal{N}(\boldsymbol{0}, \sigma^2 \Delta t \mathbf{I}) \,.
+\end{equation} Since $\sigma^2$ is pre-determined, $\sigma^2 \Delta t$ can be replaced by $\sigma^2$ for notational simplicity. Rearranging the variables in (\ref{ch3:eqn:small_signal_model}) results in 
+\begin{equation}
+\Delta \boldsymbol{\theta}_k = {J}(\boldsymbol{\theta}_{k-1})^{-1} \Delta \textbf{P}_k \,.
+\end{equation}
+Therefore, bus angle variations can be characterized by 
+\begin{equation}
+\label{ch3:eqn:angle_distribution}
+    \Delta\boldsymbol{\theta}_k \sim  \mathcal{N}(\boldsymbol{0}, \sigma^2 ({J}(\boldsymbol{\theta}_{k-1})^{T} {J}(\boldsymbol{\theta}_{k-1}))^{-1}) \,.
+\end{equation}
+
+% Topology change corresponds to theta distribution change
+From (\ref{ch3:eqn:angle_distribution}), it can be seen that the angle variations at time $k$ are characterized by the structure of ${J}$ and the angle values at $t = k-1$. Let $\mathcal{L}_o$ represent the set of all possible combinations of outages, e.g., single-line outage, double-line outage. When an outage $\ell \in \mathcal{L}_o$ happens, the grid topology and the bus admittance matrix changes. The new bus admittance matrix $\boldsymbol{Y}_{bus, \ell}$ induces a new ${J}_{\ell}$, and therefore, a new distribution of $\Delta\boldsymbol{\theta}_k$. There is a one-to-one correspondence between an outage scenario and a distribution of $\Delta\boldsymbol{\theta}_k$. Furthermore, the outage is assumed to be persistent, i.e., tripped lines are not restored in the time under consideration, and does not result in any islanding in the network, i.e., no part of the system is isolated from the main grid. 
+
+% Hypothesis testing framework for distribution change detection
+In light of the above characterization, a hypothesis testing framework is adopted to detect the distribution change in $\Delta\boldsymbol{\theta}_k$:
+\begin{subequations}
+\label{ch3:eqn:pre_post_distribution}
+\begin{align}
+     H_0: \Delta\boldsymbol{\theta}[k] &\sim {N}(\boldsymbol{0}, \sigma^2 ({J}_0^T {J}_0)^{-1}) \,,  \label{ch3:eqn:pre_distribution}\\
+     H_1: \Delta\boldsymbol{\theta}[k] &\sim {N}(\boldsymbol{0}, \sigma^2 ({J}_{\ell}^T {J}_{\ell})^{-1}) \,, \ell \in \mathcal{L}_o \,, \label{ch3:eqn:post_distribution}
+\end{align}
+ \end{subequations}
+for $k = 1, 2, \dots$. The null hypothesis is that there is no outage, and the corresponding Jacobian is ${J}_0$. The alternative hypothesis is that there is an outage scenario $\ell$, where the corresponding Jacobian is ${J}_{\ell}$. If the null hypothesis is rejected at time $\tau$, then the distribution of $\Delta\boldsymbol{\theta}[k]$ has changed, and the outage is detected. The detailed procedure of real-time detection under this framework is described in Section \ref{ch3:sec:detection_scheme}.
+
+% Limited PMU deployment
+A common challenge for PMU applications is that not all buses are equipped with a PMU. Here the previous formulations to a limited PMU deployment is adapted. Suppose $K$ PMUs are installed where $K < N$. Given a selection matrix ${S} \in \{ 0 ,1 \}^{K \times N}$ that selects $K$ observable buses from the complete set of $N$ buses, observable bus angle data is 
+\begin{equation}
+\boldsymbol{\theta}^o_k = {S} \boldsymbol{\theta}_k \,,
+\end{equation} where ${S}$ is a diagonal matrix of size $K \times N$ and entries equal to 0 or 1. The corresponding angle variations and Jacobian matrix are 
+\begin{eqnarray}
+\Delta\boldsymbol{\theta}^o_{k} &=& {S} \Delta\boldsymbol{\theta}_k \,, \\
+{J}^o(\boldsymbol{\theta}^o_{k-1}) &=& {S} {J}(\boldsymbol{\theta}^o_{k-1}) {S}^\top \,.
+\end{eqnarray}
+Therefore, $\Delta\boldsymbol{\theta}^o_{k}$ is a $K$-dimensional vector and ${J}^o(\boldsymbol{\theta}^o_{k-1})$ is a $(K \times K)$-dimensional matrix. To obtain the hypothesis testing framework in (\ref{ch3:eqn:pre_post_distribution}), $\Delta\boldsymbol{\theta}_k, {J}_0, \text{and } {J}_{\ell}$ are replaced by $\Delta\boldsymbol{\theta}^o_k, {J}^o_0, \text{and } {J}^o_{\ell}$ respectively. 
+
+
+\section{Outage Detection Scheme}
+\label{ch3:sec:detection_scheme}
+% Global monitoring
+From the previous sections, outage detection is formulated as a problem of distribution change detection under a hypothesis testing framework in Section \ref{ch3:sec:statistical_model}. In general, under normal conditions, system outputs follow a common distribution with a probability density function $f_0$. At some unknown time $\tau$, the system condition changes, and the density function changes to $f_1$. The goal is to design a scheme where an alarm is raised once a monitoring statistic $W(\cdot)$ crosses a pre-defined threshold of $c$. The two key design aspects are: (1) how to compute the monitoring statistic, $W(\cdot)$ and (2) how to determine the detection threshold, $c$. The monitoring statistic will be close to zero under a normal condition and increase unboundedly if a change happens. The detection threshold needs to be specified to meet a particular false alarm rate constraint. 
+
+%\subsection{Outage detection}
+A GLR approach originally proposed by \cite{lorden1971procedures} is adopted to design the detection scheme. The scheme repeatedly evaluates the likelihood of a normal condition against the likelihood of an abnormal condition. In the context of power system, bus angle variations are not independent samples since the distribution at time $k$ is influenced by bus angles at time $k-1$ as shown in (\ref{ch3:eqn:angle_distribution}). However, $\Delta\boldsymbol{\theta}_k$ can be regarded as a conditionally independent random variable with density function $f_0(\cdot | \boldsymbol{\theta}_{k-1})$ under $H_0$ in (\ref{ch3:eqn:pre_distribution}) and, after an outage, with density function $f_{\ell}(\cdot | \boldsymbol{\theta}_{k-1})$ under $H_1$ in (\ref{ch3:eqn:post_distribution}). For every new data $\Delta\boldsymbol{\theta}_k$, $H_0$ is tested against $H_1$ for some outage scenario $\ell \in \mathcal{L}_o$ using a log-likelihood ratio test statistic. In particular, let 
+\begin{equation}
+\label{ch3:eqn:log_likelihood_ratio}
+Z_k(\ell) = \ln \frac{f_{\ell}(\Delta\boldsymbol{\theta}_{k} | \boldsymbol{\theta}_{k-1})}{f_{0}(\Delta\boldsymbol{\theta}_{k} | \boldsymbol{\theta}_{k-1})} \,
+\end{equation} be the log-likelihood ratio of an outage scenario $\ell$ at time k. $Z_k(\ell)$ is positive if the likelihood of a change is larger than that of a normal condition. Then the test statistic is:
+\begin{equation}
+\label{ch3:eqn:glr_statistic_direct}
+G_k = \max \left\lbrace  0, \, \underset{1\le i \le k}{\max} \, \underset{\ell \in \mathcal{L}}{\max} \sum_{j=i}^{k} Z_{j}(\ell)  \right\rbrace\,.
+\end{equation}
+and the GLR detection scheme will raise an alarm at the time:
+\begin{equation}
+\label{ch3:eqn:glr_detection_rule}
+D = \inf \left\lbrace  k \ge 1: G_k \ge c \right\rbrace \,.
+\end{equation}
+Since the time and location of the outage are not known a priori, they are replaced by their maximum likelihood estimates. Schemes of the form involving searching through the maximum over time ($1\le i \le k$) and over likelihood ($\sum_{j=i}^{k} Z_{j}(\ell)$) are referred to as the GLR schemes. Such schemes have optimal properties in terms of their detection performance. Let $E_{H_0}(D)$ be the expectation of time of alarm when there is no outage, i.e., mean time to a false alarm. Suppose $c$ is chosen such that the scheme satisfies a certain false alarm rate, $E_{H_0}(D) \ge \gamma\{ 1 + o(1) \}$. For conditionally independent data, Lai has proved that the detection rule (\ref{ch3:eqn:glr_detection_rule}) is asymptotically optimal in the sense that among all rules \(T\) with \(E_{H_0}(T) \geq \gamma\{ 1 + o(1)\}\), it minimizes the worst-case detection delay as defined by
+\begin{equation}
+\overline{E}_{H_1}(T)=\sup _{\tau \geq 1} \operatorname{ess} \sup E^{(\tau)}\left[(T-\tau+1)^{+} | \boldsymbol{\theta}_{1}, \cdots, \boldsymbol{\theta}_{\tau-1}\right] \,,
+\end{equation} as the outage time $\tau \to \infty$ \cite{Lai1998}.
+
+For the actual online implementation, a recursive formulation of the GLR scheme is used. Note that $G_k$ in (\ref{ch3:eqn:glr_statistic_direct}) can be rewritten as 
+\begin{eqnarray}
+G_k &=& \max \, \left\lbrace  0,  \, \underset{\ell \in \mathcal{L}}{\max} \underset{1\le i \le k}{\max} \sum_{j=i}^{k} Z_{j}(\ell)  \right\rbrace\,, \nonumber\\
+    &=& \underset{\ell \in \mathcal{L}}{\max} \, \max \left\lbrace  0,  \, \underset{1\le i \le k}{\max} \sum_{j=i}^{k} Z_{j}(\ell)  \right\rbrace\,,\nonumber \\
+    &=& \underset{\ell \in \mathcal{L}}{\max}  \,  W_{\ell, k} \,.
+\end{eqnarray} 
+where in the first step the position of the two inner $\max$ operators is switched since the overall maximum is not affected \cite{Mei2010}. Also, in the last step,
+\begin{equation}
+\label{ch3:eqn:glr_statistics}
+W_{\ell, k} = \max \left\lbrace  0, W_{\ell, k-1} + Z_k(\ell) \right\rbrace \,,
+\end{equation}
+an equivalent recursive form of the term $\underset{1\le i \le k}{\max} \sum_{j=i}^{k} Z_{j}(\ell) $ in $G_k$. Therefore, for every scenario $\ell$, just the monitoring statistic $W_{k-1}$ at the previous time step need to be kept tracked of and the log-likelihood ratio $Z_k$ at the current time step computed. $Z_k(\ell)$ can be found analytically by
+\begin{equation}
+\label{ch3:eqn:log_likelihood_explicit}
+Z_k(\ell) = \ln\left| {J}_\ell \right| - \ln\left| {J}_0 \right| + \frac{1}{2\sigma^2} \Delta\boldsymbol{\theta}_k^{T} \left[ {J}_0{^T}  {J}_0 - {J}_\ell{^T} {J}_\ell \right] \Delta\boldsymbol{\theta}_k \,,
+\end{equation} based on the multivariate Gaussian distribution likelihood function. Using the recursive formulation, the stopping time is
+\begin{equation}
+\label{ch3:eqn:stopping_rule}
+    D = \inf \left\lbrace  k \ge 1: \underset{\ell \in \mathcal{L}}{\max} \, W_{\ell, k} \ge c \right\rbrace \,.
+\end{equation}
+
+Intuitively, the threshold is crossed when the evidence against the normal condition, i.e., no outage, has accumulated to a significant level. $c$ is a predefined threshold that controls the balance between the detection delay and the false alarm rate. A smaller $c$ corresponds to a more sensitive scheme that may have a quicker detection but could potentially flag more normal fluctuations as outages. One advantage of using the GLR approach is that such trade-off can be systematically quantified. Following \cite{Chen2016}, given a false alarm rate constraint, $c$ could be approximated by
+\begin{equation}
+\label{ch3:eqn:theshold}
+c = \ln(ARL_0 \times p) \,,
+\end{equation} where $ARL_0$ is the average run length to a false alarm of the scheme when no outage occurs. $p$ is the number of PMUs installed. For example, $c = 18.43$ when $ARL_0 = 1 \text{ day}$ with 39 PMUs installed. With this detection delay and false alarm rate trade-off in mind, system operators can choose a desired level of sensitivity, catering to the individual system needs, and implement it in the detection scheme through parameter $c$ and $ARL_0$. A flowchart summarizing the working of the detection and identification scheme outlined in this section is shown in Fig. \ref{ch3:fig:scheme_flowchart}. 
+% Flowchart for the detection and identification scheme
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{scheme_flowchart}}
+\caption{\textit{Flowchart summarizing the proposed dynamic outage detection and identification scheme.}}
+\label{ch3:fig:scheme_flowchart}
+\end{figure}
+
+
+\subsection{Additional Remarks} % (fold)
+\label{ssub:additional_remarks}
+% Discuss the relationship between J and topology
+\paragraph{Setting up Outage Scenarios}
+The one-to-one correspondence between the Jacobian and grid topology can be established by looking at how the admittance matrix is constructed in (\ref{ch2:eqn:admittance_matrix}). $\boldsymbol{Y}_{bus}$ is constructed from the bus incidence matrix ${A}$ and the line admittances. For different outage scenarios, the corresponding column of $ A$ need to be set to 0. For example, to set up the $l_{th}$ line outage, the entries in the $l_{th}$ column of ${A}$ are set to 0 to get ${A}_\ell$. The corresponding bus admittance matrix $\boldsymbol{Y}_{bus, \ell}$ is obtained by $\boldsymbol{Y}_{bus, \ell} = {A}_\ell \operatorname{diag}(\mathbf{y}) {A}_\ell^{\top}$. The Jacobian matrix ${J}_{\ell}$ describing the post-outage system is obtained by (\ref{ch3:eqn:elements_J}). 
+
+For example, a 4-bus power system with five transmission lines might have a bus to branch incidence matrix of \[ {A} = \begin{bmatrix}
+1   &   0   &   1   &   0   &   1 \\
+-1  &   1   &   0   &   0   &   0 \\
+0   &   -1  &   -1  &   1   &   0 \\
+0   &   0   &   0   &   -1  &   -1
+\end{bmatrix} .\]
+In offline preparation for line 1 outage scenario, the following is obtained:
+\[ {A}_{\ell_1} = \begin{bmatrix}
+\color{red} 0   &   0   &   1   &   0   &   1 \\
+\color{red} 0   &   1   &   0   &   0   &   0 \\
+0   &   -1  &   -1  &   1   &   0 \\
+0   &   0   &   0   &   -1  &   -1
+\end{bmatrix} .\] Subsequently, the corresponding admittance matrix can be obtained as $$\boldsymbol{Y}_{bus, \ell_1} = {A_{\ell_1} \operatorname{diag}(\mathbf{y}) A_{\ell_1}}^{\top}.$$
+
+Therefore, no simulation or real data is needed to generate the outage scenarios to set up the monitoring scheme during offline preparation. In real applications, both the bus incidence matrix and the line admittances can be obtained based on the network topology and data during the outage-free period. It will then be sufficient to apply the proposed method.
+
+% Discuss the effects of limited PMU deployment
+\paragraph{Inaccuracy of Jacobian Due to Unobservable Neighbor Buses}
+For a limited PMU deployment, there may be some inaccuracies in the computed diagonal elements of ${J}^o(\boldsymbol{\theta}^o_{k-1})$. In particular, if there is no PMU on bus $n$, a neighbor of bus $m$, measurements $\text{V}_{n}$ and $\theta_{n}$ would not be available. Therefore, the term, $-\text{V}_{m} \text{V}_{n} \text{Y}_{m n} \sin \left(\theta_{m}-\theta_{n}-\alpha_{m n}\right)$, would not be computable and is treated as 0 for the summation in (\ref{ch3:eqn:elements_J_diag}). The issue could be alleviated by carefully designing the PMU placement (locations). One possible design rule is to make sure that each observable bus has at least one observable neighbor bus. In general, PMU locations will influence the efficiency of outage detection. It is also of interest to practitioners to find the optimal placement of PMUs so that even with limited PMUs, outages can be detected as quickly as possible. However, the placement problem is beyond the scope of this work, and it will studied in future research. 
+
+\paragraph{Identification of Tripped Lines}
+Following detection, the actual lines tripped need to be identified so that follow-up, potentially automatic, actions can be taken. 
+%Authors in \cite{Ardakanian2017} propose a system identification-based method to locate line outage in the distribution system. Tate and Overbye \cite{Tate2008} match the expected steady-state angle change after an outage with the observed change. Using simulated data, Garcia \etal \cite{Garcia2016} train a multinomial regression classifier while Zhou \etal \cite{Zhou2016} train a support vector machine (SVM) to identify outaged lines. Emami and Abur \cite{Emami2013} recover injected currents which identify the outed line. 
+Since the likelihoods of every outage scenario are monitored and compared online, one way to locate the tripped line(s) without any extra computation is to identify the scenarios with the top three likelihoods at the time of detection. In particular, following a detection at time $D$, top-three possible tripped lines can be identified as $\ell_{(1)}, \ell_{(2)}, \text{and } \ell_{(3)}$ such that:
+\begin{equation}
+\label{ch3:eqn:identification}
+{W}_{\ell_{(1)}, D} \ge {W}_{\ell_{(2)}, D} \ge {W}_{\ell_{(3)}, D} \ge {W}_{\ell, D}\,,
+\end{equation} for all other $\ell \in \mathcal{L}_o$.
+
+% subsubsection additional_remarks (end)
+
+
+
+\section{Simulation Study}
+\label{ch3:sec:results}
+\subsection{Simulation Setting}
+The proposed detection scheme is tested on two IEEE standard test power systems, namely 39-bus New England system \cite{athay1979practical} and 2383-bus Polish system.  System transient responses following an outage are simulated using the open-source dynamic simulation platform COSMIC \cite{Song2016} in which a third-order machine model is used. We conduct extensive single-line outage detection and identification analysis on the 39-bus system by comparing the proposed method to two other methods. Outages on the 2383-bus system are simulated to show that the proposed scheme can be deployed on large-scale systems as well.
+
+The sampling frequency of PMU is assumed to be 30 Hz. For every new simulation, system loads are varied by a random percentage between -5\% and 5\% from the base-line values. Each simulation runs for 10 seconds, and the line outage takes place at the 3rd second. Active power fluctuations are assumed to be uncorrelated and have homogeneous variances where $\sigma^2 = 0.005$ in (\ref{ch3:eqn:pre_post_distribution}). Artificial noise is added to all sampled bus angle data, $\Delta \boldsymbol{\theta}$, to account for system and measurement noise \cite{Brown2016}. The noises are drawn from a normal distribution with mean $0$ and standard deviation equivalent to 10\% of the average value of sampled $\Delta{\theta}$ on respective buses. Detection thresholds c in (\ref{ch3:eqn:stopping_rule}) corresponding to seven different false alarm rates are obtained by (\ref{ch3:eqn:theshold}) and listed in Table \ref{ch3:tab:thresholds}. 
+\begin{table}[!htpb]
+\caption{Detection Thresholds Corresponding to Different Systems and False Alarm Rates}
+\label{ch3:tab:thresholds}
+\centering
+\begin{tabular}{cccc}
+\hline
+\hline
+Mean Time to  && Number of PMUs Installed\\
+False Alarm (day) & 10 & 39 & 1000 \\
+\hline
+1/24 & 13.89 & 15.25 & 18.50 \\
+1/4 & 15.68 & 17.05 & 20.29 \\
+1/2 & 16.38 & 17.74 & 20.98 \\
+1 & 17.07 & 18.43 & 21.68 \\
+2 & 17.76 & 19.12 & 22.37 \\
+7 & 19.02 & 20.38 & 23.62 \\
+30 & 20.47 & 21.83 & 25.08 \\
+\hline
+\end{tabular} 
+\end{table}
+
+\subsection{Simulation Results} 
+\subsubsection{39-Bus New England System}
+The 39-bus system has 39 buses, 10 generators, and 46 transmission lines. Extensive simulation studies are conducted for the full PMU deployment and limited PMU deployment scenario. For the latter case, PMUs are assumed to be installed on bus 2, 3, 7, 9, 11, 13, 16, 17, 19, and 21. In total, 3000 random simulations of outages at line 1 to 36 are studied, except for line 22 as its outage leads to two separate networks and line 37 to line 46 since they are the only line connecting the generator bus to the system. The proposed method can detect outages instantaneously in most cases with a full PMU deployment. Therefore, only the detection results of a limited PMU deployment are presented. 
+
+% Typical progression of monitoring statistics
+\begin{table}[!htpb]
+\centering
+\caption{Time-step Breakdown of The Detection Scheme For Processing Each New Measurement}
+\label{ch3:tab:time_step}
+\begin{center}
+\begin{tabular}{lll}
+\hline
+\hline
+Step    & Action  & Time Required \\ \hline
+0   &   Receive new sample  &   0 \\ \hline
+1   &   Evaluate $\mathbf{J}_{0}$ and $\mathbf{J}_{\ell}$ for $\ell \in \mathcal{L}$   &   1 ms \\ \hline
+2   &   Compute outage statistics $\mathbf{W}_{\ell}$ for $\ell \in \mathcal{L}$  &   0.227 ms \\ \hline
+3   &   Check if $\max \mathbf{W}_{\ell}$ for $\ell \in \mathcal{L}$ exceed $c$  &   0 \\ \hline
+\end{tabular}
+\end{center}
+\end{table}%
+
+
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{individual_line10_lim_39}}
+\caption{\textit{Progression of monitoring statistics for line 10 outage. Individual line statistics are represented by faded dash lines of various colors. The blue solid line is the overall statistic.}}
+\label{ch3:fig:individual_line10_lim_39}
+\end{figure}
+An outage at line 10 is used to demonstrate the typical working of the detection scheme. Table \ref{ch3:tab:time_step} shows a time-step breakdown for the scheme when processing each new measurement. The execution time is obtained by running the algorithm on a personal laptop with a 2.9 GHz Intel Core i5 processor. Note that a new measurement is collected every 33 ms. Fig. \ref{ch3:fig:individual_line10_lim_39} shows the progression of the individual scenario statistics as well as the overall statistic. After the outage (3rd second), individual statistics start to deviate from zero. The overall monitoring statistic rises quickly, too, since it is the maximum of all individual statistics. The scheme issues an alarm when the overall statistic crosses the threshold at time 3.5 seconds. In this case, the scheme records a detection delay of 0.5 seconds. Among all 35 individual statistics representing different outage scenarios, only some have values significantly larger than 0, while most of them stay close to 0 as they are deemed as unlikely scenarios by the detection scheme. 
+
+Also, since no restriction is placed on the transient stability of the post-outage system, the proposed scheme does not require bounded signals for outage detection, and it works equally well in stable and unstable scenarios. In fact, an outage that creates an unstable system is easier to detect since it produces stronger signals than those that do not. This is illustrated by a separate simulation example included in the Appendix.
+
+\paragraph{Detection Performance}
+% Overview of detection delays over different alarm rates
+Fig. \ref{ch3:fig:delay_dist_39_dyn_lim} shows the empirical distribution of detection delays under seven false alarm rates. A more stringent false alarm rate corresponds to a detection scheme with longer delays on average. For example, the scheme with an $ARL_0 = 1/24$ day detects much more outages within 0.25 seconds than the one with $ARL_0 = 30$ days. These differences are not significant. Hence, the proposed scheme's performance based on detection delay is not overly sensitive to different false alarm rates. 
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{delay_dist_39_dyn_lim}}
+\caption{\textit{Comparison of the empirical distribution of detection delays in seconds under different false alarm rates. The number in the label is the number of days until a false alarm.}}
+\label{ch3:fig:delay_dist_39_dyn_lim}
+\end{figure}
+
+% Overview of detection delays over different lines
+The detection performance across different line outages is also studied. There are clear variations in terms of detection delay among those detected outages. These variations can be largely attributed to the PMU placement and the grid topology.
+
+For outages with almost zero detection delay, they are lines where either PMUs are installed on both ends of the line, e.g., line 3, 21, and 23, or one PMU is connected to the line, e.g., line 20, 25, and 27. Signals can be readily picked up by nearby PMUs. On the other hand, the absence of PMU nearby may have contributed to the longer detection delays. In particular, there are no PMUs available on either end of line 9, 10, 28, 32, 33, and 34. These outage signals have to be detected by sensors far away from the location. Fig. \ref{ch3:fig:boxplot_delay_30day_pmu} summarizes the comparison.
+
+Another factor is the power grid topology. The scheme recorded shorter delays for line 2, 14, 15, and 30. It is observed that these outages produced severe disturbances. Line 2, 14, and 15 connect to a generator bus, and line 30 connects a subnetwork to the main network. On the other hand, outages at line 5, 11, 13, and 26 produced weaker and shorter disturbances, which are more difficult to detect. Consequently, they recorded longer detection delays. See Fig. \ref{ch3:fig:boxplot_delay_30day_critical} for the comparison.
+
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{\Pic{pdf}{boxplot_delay_30day_pmu}}
+    \caption{\textit{Boxplot of the empirical distributions of detection delay in seconds for lines with at least 1 PMU nearby.}}
+    \label{ch3:fig:boxplot_delay_30day_pmu}
+\end{figure}
+\begin{figure}[!htpb]
+    \centering
+    \includegraphics[width=\linewidth]{\Pic{pdf}{boxplot_delay_30day_critical}}
+    \caption{\textit{Boxplot of the empirical distributions of detection delay in seconds for lines at different topological locations.}}
+    \label{ch3:fig:boxplot_delay_30day_critical}
+\end{figure}
+
+\paragraph{Comparison with Other Methods}
+% Comparison of detection delays with other methods
+The proposed method's outage detection performance is also compared with two other methods. The line outages considered here are line 26, 27, and 34. Other methods considered here are the static detection method based on the DC power flow model in \cite{Chen2016}, under a full and limited PMU deployment, and the CUSUM-type central rule based on Ohm's law in \cite{Jamei2017a}, with a limited PMU deployment. The placement of 10 PMUs is the same for all methods. For the CUSUM scheme in \cite{Jamei2017a}, parameters are chosen to satisfy the same false alarm rates in Table \ref{ch3:tab:thresholds} based on formula in \cite{montgomery2007introduction}. The respective detection delays are summarized in Table \ref{ch3:tab:delay_comparison_39}. A dash means a missed detection. It can be seen that the proposed method, ``AC - limited'', is consistently faster at detecting outages than the other methods.
+
+\begin{table}[!t]
+\caption{Comparison of Detection Delay (s) of Three Different Line Outages Under Different Detection Schemes}
+\label{ch3:tab:delay_comparison_39}
+\centering
+\begin{tabular}{llcccc}
+\hline
+\hline
+    & & \multicolumn{4}{c}{Mean Time to False Alarm (day)} \\ 
+Line    & Scheme & 1/24 & 2 & 7 & 30 \\ \hline
+ 26     &   DC - full & 9.9908 & 9.9908 & 9.9908 & 9.9908 \\ 
+        &   DC - limited & \textendash & \textendash & \textendash & \textendash \\ 
+        &   Ohm's Law - limited & 2.8150 & 3.0963 & 3.1406 & 3.9333 \\      
+        &   AC - limited & 0.1001 & 0.1005 & 0.3300 & 0.3489 \\ \hline
+ 27     &   DC - full & 4.5398 & 4.5398 & 4.5398 & 4.5398 \\ 
+        &   DC - limited & \textendash & \textendash & \textendash & \textendash \\ 
+        &   Ohm's Law - limited & 3.3044 & 3.5000 & 3.6900 & 3.8630 \\  
+        &   AC - limited & 0.0012 & 0.0012 & 0.0026 & 0.0039 \\ \hline
+ 34     &   DC - full & 0.1801 & 0.1801 & 0.1801 & 0.1801 \\ 
+        &   DC - limited & \textendash & \textendash & \textendash & \textendash \\ 
+        &   Ohm's Law - limited & 1.5811 & 2.9250 & 3.2014 & 3.6788 \\  
+        &   AC - limited & 0.0879 & 0.0879 & 0.1558 & 0.4994 \\ \hline
+\end{tabular}
+\end{table}
+
+\paragraph{Identification Performance}
+The identification performance of the proposed scheme is analyzed by comparing the true outage line with the identified line. The results are shown in Fig. \ref{ch3:fig:identification_full_top3} and Fig. \ref{ch3:fig:identification_heatmap}. 
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=.8\linewidth]{\Pic{pdf}{identification_full_top3}}
+    \caption{\textit{Heat map of the identification accuracy of the proposed method in the 39-bus system with a full PMU deployment.}}
+    \label{ch3:fig:identification_full_top3}
+\end{figure}
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=.8\linewidth]{\Pic{pdf}{identification_top3_tree_10pmu}}
+    \caption{\textit{Heat map showing the identification accuracy of the proposed method in the 39-bus system with 10 PMUs deployed.}}
+    \label{ch3:fig:identification_heatmap} 
+\end{figure}
+True outage lines are listed on the vertical axis, and the lines identified are on the horizontal axis. Cell color represents the empirical likelihood of identification of different lines. Therefore, a perfect identification scheme would have all diagonal cells equal to 1 and 0 everywhere else. As seen from the figure, most lines can be accurately identified under a full PMU deployment. As for the 10-PMU case, around half of the outages can be identified with a high probability. When the scheme misses the true outage line, it often misidentifies the adjacent line as tripped. Systematic biases created by the unavailability of PMUs on certain buses may have contributed to the inaccuracies. This suggests installing more PMUs or inspecting the identified line and all its neighboring lines could improve the localization accuracy. 
+
+\subsubsection{2383-Bus Polish System}
+To show that the proposed dynamic detection scheme can be deployed in a system with realistic network size, outages in the 2383-bus system are studied. This test system has 2383 buses and 2896 transmission lines. 1000 PMUs are assumed to be placed at randomly selected locations in the system. Eight different line outages are simulated to test the proposed detection scheme. Detection delay results corresponding to four different false alarm rates are reported in Table \ref{ch3:tab:delay_2383}. Considering the size of the system, detecting a single-line outage is much more difficult. Therefore, delays experienced are considerably longer than those in the 39-bus system. There are also several undetected outages. 
+\begin{table}[!t]
+\caption{Detection Delay (s) of Eight Different Line Outages in 2383-bus System with 1000 PMUs Deployed}
+\label{ch3:tab:delay_2383}
+\centering
+\begin{tabular}{lcccc}
+\hline
+\hline
+    & \multicolumn{4}{c}{Mean Time to False Alarm (day)} \\ 
+Line    & 1/24 & 2 & 7 & 30 \\ \hline
+600 & 4.6667 & 4.6667 & 4.6667 & 4.6667\\ 
+700 & 1.3667 & 1.3667 & 1.3667 & 1.3667 \\ 
+750 & 4.9000 & 4.9000 & 4.9000 & 4.9000 \\ 
+800 & 1.3667 & 1.3667 & 6.7667 & 6.7667 \\ 
+900 & \textendash & \textendash & \textendash & \textendash \\ 
+1000    & \textendash & \textendash & \textendash & \textendash \\ 
+1050    & 1.3667 & 1.3667 & 1.3667 & 1.3667 \\ 
+1650    & \textendash & \textendash & \textendash & \textendash \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+\label{ch3:sec:conclusion}
+In this work, a real-time dynamic line outage detection and identification scheme is developed based on the AC power flow model and GLR scheme. A time-variant small-angle relationship between bus voltage angles and active power injections is derived. The pre- and post-outage statistical models of the angle variations are obtained. The proposed scheme is effective in both detection and identification. It is also scalable, as seen from the results in the 2383-bus system. 
+
+For further research, it might be worth investigating the optimal number and placement of a limited number of PMUs. As seen from Section \ref{ch3:sec:results}, there is a varying level of detection delays due to PMU placement. The number of PMUs needed to achieve a certain level of identification accuracy is also worth investigating. In addition, incorporating generator dynamics into the system model might prove useful as the detailed physical model could provide an even better direction for outage detection and identification. This direction of research is pursued in Chapter \ref{ch:detection_using_generator_dynamics}.
+
+
+\section{Appendix} % (fold)
+\label{ch3:sec:appendix}
+\subsection{Unstable Post-Outage System}
+A simulation example is shown here to illustrate the working of the detection scheme when the outage creates an unstable and transient system. In the 39-bus system, line 37 outage creates large disturbances throughout the system, as shown in Figure \ref{ch3:fig:line_37_outage}. From the onset of the outage to the end of the simulation, voltage phase angles at most buses show no significant sign of stabilization. The detection scheme is able to detect the outage immediately, as shown in Figure \ref{ch3:fig:line_37_detection}. In this case, the monitoring statistic records a significantly large value, indicating that the strength of the signals is strong. 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_37_outage}}
+\caption{\textit{The progression of bus voltage phase angles after the outage of line 37. Each line represents the voltage phase angles from one of the buses.}}
+\label{ch3:fig:line_37_outage}
+\end{figure}
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_37_detection}}
+\caption{\textit{The progression of the monitoring statistic for line 37 outage.}}
+\label{ch3:fig:line_37_detection}
+\end{figure}
+
+
+
+
+% section outage_detection_using_approximate_dynamics (end)
+
+
+% Algorithm
+% \begin{algorithm}[!t]
+% \AlgoFontSize
+% \DontPrintSemicolon
+
+% \KwGlobal{max. calories of daily intake $\mathcal{C}$}
+% \KwGlobal{calories per bowl of rice $\mathcal{B}$}
+% \BlankLine
+
+% \SetKwFunction{fEatRice}{EatRice}
+% \SetKwFunction{fDoExercise}{DoExercise}
+
+% \KwIn{number of bowls of rice $n$}
+% \KwOut{calories intake}
+% \Proc{\fEatRice{$n$}}{
+%   $cal \gets n \times \mathcal{B}$\;
+%   \uIf{$cal \geq \mathcal{C}$}{
+%     \Return $\mathcal{C}$\;
+%   }
+%   \Else{
+%     \Return $cal - \fDoExercise{n}$\;
+%   }
+% }
+
+% \BlankLine
+
+% \KwIn{time duration (in minutes) of exercise $t$}
+% \KwOut{calories consumed}
+% \Func{\fDoExercise{$t$}}{
+%   $cal \gets 0$\;
+%   \lFor{$i \gets 1$ \To $t$}{$cal \gets cal + i$}
+%   \Return $cal$\;
+% }
+
+% \caption{Sample pseudo code of a dummy algorithm.}
+% \label{Rice:algo:sample}
+% \end{algorithm}
+
+% Multiple figures in one line
+% \begin{figure}[!t]
+%   \centering
+%   \begin{minipage}[b]{.45\linewidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\Exp{eps}{taste_with_meals}}
+%     \caption{Taste with meal repetition.}
+%     \label{Rice:exp:taste_with_meals}
+%   \end{minipage}
+%   \hspace*{2em}
+%   \begin{minipage}[b]{.45\linewidth}
+%     \centering
+%     \includegraphics[width=\linewidth]{\Exp{eps}{taste_with_freshness}}
+%     \caption{Taste with meal freshness.}
+%     \label{Rice:exp:taste_with_freshness}
+%   \end{minipage}
+% \end{figure}

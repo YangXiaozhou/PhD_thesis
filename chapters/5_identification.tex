@@ -1,5 +1,5 @@
-\SetPicSubDir{4_identification}
-\SetExpSubDir{4_identification}
+\SetPicSubDir{5_identification}
+\SetExpSubDir{5_identification}
 
 \chapter{Multiple-line Outage Identification}
 \label{ch:identification}
@@ -8,11 +8,14 @@
 \section{Introduction} % (fold)
 \label{sec:introduction}
 
-% section introduction (end)
+a new framework of multiple-line outage identification based on power system sensitivity analysis and sparse regression methods considering line diagnosabilities. Using readily available system topology and parameter information, a signature map of line outages based on AC power flow sensitivity analysis is build in advance. Outage identification problem is then formulated into an underdetermined sparse regression problem that accommodates any a priori unknown number of simultaneous line outages. Crucially, clusters of lines whose outages are indistinguishable under the given PMU placement are identified and augmented with the initial result to improve identification accuracy. 
+
 Our contributions can be summarized in three aspects: 1) We improve the state-of-the-art multiple-line outage identification performance under limited PMU deployment; 2) The novel sparse regression formulation accommodates unknown number of outage lines and is robust with noisy data; 3)
 We also propose a way to account for indistinguishable outages using minimal diagnosable clusters which significantly improve overall identification accuracy.
 
 The rest of this paper is organized as follows. The basis for outage identification is the post-outage voltage angle signature and is derived in Section \ref{sec:angle_signature}. Multiple-line outage identification scheme is then described in Section \ref{sec:identification_scheme}. Section \ref{sec:simulation} demonstrates the effectiveness of the proposed scheme compared to existing ones. We conclude this work and discuss future research directions in Section \ref{sec:conclusion}. 
+
+% section introduction (end)
 
 \section{Phase Angle Signature of Outages}
 \label{sec:angle_signature}

@@ -84,7 +84,7 @@ A separate line of work makes use of the direct current (DC) power flow model. U
 This line of work does not require all buses to be monitored by a PMU. However, the steady-state approximation would not be sufficient at describing the actual system behavior following an outage.
 % subsubsection by_approach (end)
 
-There is minimal work on detection schemes that allow unobservable buses and consider system transient response to an outage. 
+Therefore, existing methods either do not consider the transient dynamics following an outage or require a full PMU deployment. There is minimal work on detection schemes that allow unobservable buses and exploit system transient response to an outage for a faster detection.
 
 
 \subsubsection{By System Dynamics} % (fold)
@@ -140,18 +140,23 @@ Therefore, given an outage detection timestamp, multiple-line outage identificat
 % Organization
 This thesis is devoted to the development of novel power system line outage detection and identification methods by addressing the challenges and research gaps mentioned in previous sections. In particular, the rest of this thesis is organized as follows.
 
-Chapter \ref{ch:ps_background} gives background information on how power systems as complex networks could be modeled and simulated. These information will be repeated referenced in the rest of this thesis. Specifically, AC power flow model that describes system algebraic states, i.e. bus voltage, are introduced along with relevant power system physical quantities. Then, dynamic simulation procedure of power systems and the open-source software package used to do it are introduced. These describe how line outage data are simulated and obtained using standard IEEE test power systems. 
+Chapter \ref{ch:ps_background} gives background information on how power systems as complex networks could be modeled and simulated. These information will be repeatedly referenced in the rest of this thesis. Specifically, AC power flow model that describes system algebraic states, i.e. bus voltage, are introduced along with relevant power system physical quantities. Then, dynamic simulation procedure of power systems and the open-source software package used to do it are introduced. These describe how line outage data are simulated and obtained using standard IEEE test power systems. 
 
 % First work
 % Our approach and contribution
-Chapter \ref{ch:detection_using_approximate_dynamics} describes a novel hybrid approach to outage detection where a power system model is the basis for the statistical detection method. A time-variant small-signal relationship between net active power and nodal voltage phase angles is derived from the AC power flow model. Outage detection is then formulated as a statistical distribution change detection problem. A generalized likelihood ratio detection scheme is implemented to detect the outage at a pre-specified false alarm rate. 
+Chapter \ref{ch:detection_using_approximate_dynamics} describes a novel real-time dynamic outage detection scheme based on the AC power flow model and statistical change detection theory, using voltage phase angle data collected from a limited number of PMUs. The proposed method can capture system dynamics since it retains the time-variant and nonlinear nature of the power system. The method is computationally efficient and scales to large and realistic networks. Extensive simulation studies on IEEE 39-bus and 2383-bus systems demonstrated the effectiveness of the proposed method.
 
 % Second work
-In Chapter \ref{ch:detection_using_generator_dynamics}, a unified detection framework that monitors both generator dynamics and load bus power changes using a limited number of PMUs is developed. System transient dynamics are tracked through nonlinear state estimation via a particle filter (PFs). A statistical change detection scheme is constructed by monitoring the PF-predicted system output's compatibility with the expected normal-condition measurement. When an outage happens, a significant reduction in the compatibility triggers an alarm, detecting the outage in the quickest time possible. 
+In Chapter \ref{ch:detection_using_generator_dynamics}, a unified detection framework that utilizes both generator dynamic states and nodal voltage information is proposed. The inclusion of generator dynamics makes detection faster and more robust to a priori unknown outage locations. The superior performance is demonstrated using the IEEE 39-bus test system. In particular, the scheme achieves an over 80\% detection rate for 80\% of the lines, and most outages are detected within 0.2 seconds. 
+% Immediate and wider implication
+The new approach could be implemented to improve system operators' real-time situational awareness by detecting outages faster and providing a breakdown of outage signals for diagnostic purposes.
 
 % Third work 
 % Overall contributions
 % Our approach
-Chapter \ref{ch:identification} describes a new framework of multiple-line outage identification based on power system sensitivity analysis and sparse regression methods considering line diagnosabilities. Using readily available system topology and parameter information, a signature map of line outages based on AC power flow sensitivity analysis is build in advance. Outage identification problem is then formulated into an underdetermined sparse regression problem that accommodates any a priori unknown number of simultaneous line outages. Crucially, clusters of lines whose outages are indistinguishable under the given PMU placement are identified and augmented with the initial result to improve identification accuracy. 
+Chapter \ref{ch:identification} describes a new framework of multiple-line outage identification using partial nodal voltage measurements. Using the AC power flow model, voltage phase angle signatures of outages are extracted and used to group lines into minimal diagnosable clusters. Identification is then formulated into an underdetermined sparse regression problem solved by lasso. Tested on IEEE 39-bus system with 25\% and 50\% PMU coverage, the proposed identification method is 93\% and 80\% accurate for single- and double-line outages. 
+% Why does it matter? Immediate and wider implication
+Our study suggests that the AC power flow is better at capturing outage patterns and sacrificing some precision could yield substantial improvement in identification accuracy. These findings could contribute to the development of future control schemes that help power systems resist and recover from outage disruptions in real time. 
+
 
 Chapter \ref{ch:conclusion} concludes this thesis and discusses future research directions.

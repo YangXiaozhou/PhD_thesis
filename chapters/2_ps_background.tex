@@ -5,7 +5,7 @@
 \label{ch:ps_background}
 \vspace{2em}
 
-This Chapter provides brief background information on power system modeling and simulation. In particular, relevant physical quantities and physical laws governing power systems are introduced in Section \ref{ch2:sec:ps_model}. Power system simulation and PMU data collection are introduced in Section \ref{ch2:sec:simulation}.
+This chapter provides brief background information on power system modeling and simulation. In particular, relevant physical quantities and physical laws governing power systems are introduced in Section \ref{ch2:sec:ps_model}. Power system simulation and PMU data collection are introduced in Section \ref{ch2:sec:simulation}.
 
 \section{Power System Model}
 \label{ch2:sec:ps_model}
@@ -30,35 +30,60 @@ in the so-called exponential, polar, and rectangular form. The same can be writt
 where $I^*$ is the complex conjugate of $I$. $\text{P}$ is real or active power and $\text{Q}$ is reactive power. 
 
 % AC power flow model
-A power system can be modeled as a network with $N$ buses of $\mathcal{N} = \{1, \dots, N\}$ connected by $L$ transmission lines of $\mathcal{L} = \{1, \dots, L\}$. The flow of real and reactive power in the network can be characterized by a set of non-linear algebraic equations called the AC power flow model. This set of equations describes the relationship between net active power injection (P), net reactive power injection (Q), voltage magnitude (V), and voltage phase angle ($\theta$) governed by Kirchhoff's circuit laws. They can be written as:
+A power system can be modeled as a network with $N$ buses of $\mathcal{N} = \{1, \dots, N\}$ connected by $L$ transmission lines of $\mathcal{L} = \{1, \dots, L\}$. An example power system is illustrated in Figure \ref{ch2:fig:ieee39}. This is a well-known IEEE standard test system representing the power system of New England. This system has 39 buses connected by 46 transmission lines.   
+% Flowchart for the detection and identification scheme
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{png}{IEEE39}}
+\caption{\textit{10-machine New England power system. This IEEE test system has 39 buses including 10 generator buses and 29 load buses. Bus is represented by black horizontal bar and transmission line by green line with arrow.}}
+\label{ch2:fig:ieee39}
+\end{figure}
+The flow of real and reactive power in the network can be characterized by a set of non-linear algebraic equations called the AC power flow model. This set of equations describes the relationship between net active power injection (P), net reactive power injection (Q), voltage magnitude (V), and voltage phase angle ($\theta$) governed by Kirchhoff's circuit laws. They can be written as:
 % AC power flow equations
 \begin{subequations}
-\label{eqn:AC_power_flow_model}
+\label{ch2:eqn:AC_power_flow_model}
 \begin{align}
-\text{P}_m &= \text{V}_m \sum_{n=1}^{N} \text{V}_n \text{Y}_{mn} \cos (\theta_m - \theta_n - \alpha_{mn}) \,, \label{eqn:AC_power_flow_P}\\
-\text{Q}_m &= \text{V}_m \sum_{n=1}^{N} \text{V}_n \text{Y}_{mn} \sin (\theta_m - \theta_n - \alpha_{mn}) \,, \label{eqn:AC_power_flow_Q}
+\text{P}_m &= \text{V}_m \sum_{n=1}^{N} \text{V}_n \text{Y}_{mn} \cos (\theta_m - \theta_n - \alpha_{mn}) \,, \label{ch2:eqn:AC_power_flow_P}\\
+\text{Q}_m &= \text{V}_m \sum_{n=1}^{N} \text{V}_n \text{Y}_{mn} \sin (\theta_m - \theta_n - \alpha_{mn}) \,, \label{ch2:eqn:AC_power_flow_Q}
 \end{align}
 \end{subequations}
-for bus $m = 1, 2, \dots, N$ \cite{Glover2012}. Y$_{mn}$ is the magnitude of the $(m,n)_{th}$ element of the bus admittance matrix $\boldsymbol{Y}$ when the complex admittance is written in the exponential form, i.e. 
+for bus $m = 1, 2, \dots, N$ \cite{Glover2012}. Y$_{mn}$ is the magnitude of the $(m,n)_{th}$ element of the bus admittance matrix $\boldsymbol{Y}_{bus}$ when the complex admittance is written in the exponential form, i.e. 
 \begin{equation}
-\label{eqn:admittance_expression}
+\label{ch2:eqn:admittance_expression}
 \text{Y}_{mn}e^{j\alpha_{mn}} = G_{mn} + jB_{mn} \,,
 \end{equation}
-where $G_{mn}$ and $B_{mn}$ are the conductance and susceptance of line $\ell$ connecting bus $m$ and $n$. Elements of the bus admittance matrix corresponding to a baseline condition are usually known and this condition is also assumed for the rest of this thesis. For a large system, $\boldsymbol{Y}$ is usually a sparse matrix since any single bus only has a few incident buses, i.e., Y$_{mn} = 0$ if bus $m$ and bus $n$ are not connected. The system topology is embedded in the admittance matrix $\boldsymbol{Y}$. In particular, the admittance matrix is constructed by 
+where $G_{mn}$ and $B_{mn}$ are the conductance and susceptance of line $\ell$ connecting bus $m$ and bus $n$. 
+
+Elements of the bus admittance matrix corresponding to a baseline condition are usually known and this condition is also assumed for the rest of this thesis. For a large system, $\boldsymbol{Y}_{bus}$ is usually a sparse matrix since a single bus usually has a few incident buses, i.e., Y$_{mn} = 0$ if bus $m$ and $n$ are not connected. Therefore, the topology of a power system is embedded in the admittance matrix, in turn, in the AC power flow model. Let $A \in \{-1, 1\}^{N\times L}$ be the bus to branch incidence matrix with columns representing transmission lines and rows as buses. For line $\ell$ transferring power from bus $m$ to bus $n$, the $l_{th}$ column of the matrix $A$ has 1 and -1 on the $m_{th}$ and $n_{th}$ position and 0 everywhere else. Also let $\mathbf{y}$ be the L-vector of individual line admittance. Then, the admittance matrix can be constructed by 
 \begin{equation}
-\label{eqn:admittance_matrix}
-\boldsymbol{Y} = \mathbf{A [y] A}^{T}
-\end{equation} where $\mathbf{A}$ is the bus to branch incidence matrix with columns representing lines and rows as buses. $\mathbf{A}^T$ is the transpose of $\mathbf{A}$. For the $l_{th}$ line transmitting power from bus $m$ to bus $n$, the $l_{th}$ column of the matrix $\mathbf{A}$ has 1 and -1 on the $m_{th}$ and $n_{th}$ position and 0 everywhere else. $\mathbf{[y]}$ is the diagonal matrix with individual line admittances on the diagonal.
+\label{ch2:eqn:admittance_matrix}
+\boldsymbol{Y}_{bus} = {A} \operatorname{diag}(\mathbf{y}) {A}^{\top}
+\end{equation} where $\operatorname{diag}(\mathbf{y})$ is the diagonal matrix with individual line admittance on the diagonal and ${A}^\top$ is the transpose of ${A}$. The bus to branch incidence matrix and the bus admittance matrix of the IEEE 39-bus system are plotted in Figure \ref{ch2:fig:A_matrix} and \ref{ch2:fig:Y_matrix}. From the figures, the sparsity structure of the matrices are clearly visible.
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{\Pic{pdf}{A_matrix}}
+  \caption{\textit{Bus to branch incidence matrix of IEEE 39-bus system.}}
+  \label{ch2:fig:A_matrix}
+\end{figure}%
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\textwidth]{\Pic{pdf}{Y_matrix}}
+  \caption{\textit{Bus admittance matrix of IEEE 39-bus system.}}
+  \label{ch2:fig:Y_matrix}
+\end{figure}
+    
 
 
 \section{Power System Simulation}
 \label{ch2:sec:simulation}
 
-% Timescale for dynamic simulation
+Dynamic simulation of power systems is an important area of research useful for tasks such as expansion planning, generator scheduling, and contingency studies. In this thesis, the open-source dynamic simulation package, the Cascading Outage Simulator with Multiprocess Integration Capabilities or COSMIC~\cite{Song2016}, is used to generate realistic power system dynamic data under the impact of line outages\footnote{The package is implemented in MATLAB and the source code is accessible at their GitHub \href{https://github.com/ecotillasanchez/cosmic}{repository}.}.  
 
 % System models for dynamic simulation
-
+The simulation package builds a complete model of the power system using a set of differential-algebraic equations (DAEs). The dynamic components of the system, e.g., synchronous machines of generator bus, exciters, and governors, are modeled using differential equations. The associated nonlinear power flows on power grids are modeled using the AC power flow equations of (\ref{ch2:eqn:AC_power_flow_model}).  
 % How is outage simulated
+In addition, for the purpose of contingency study, discrete changes to system configurations due to exogenous or endogenous factors are modeled using a set of discrete variable constraints. When any of the discrete variable changes during a simulation, e.g., a line outage has happened, the DAE solver stops temporarily to process the event, update system initial conditions, and resume solving the set of DAEs with the new system condition. 
 
 % How is PMU data collected
-For a bus equipped with PMU, V and $\theta$ are measured and available. 
+For all the simulation studies conducted for this thesis, transmission line outages are simulated using COSMIC using a certain IEEE test system. The dynamic simulation is run for 10 seconds and the outage is scheduled to happen at the third second. The outage is assumed to be persistent, i.e., they are not repaired throughout the simulation. Although system load models are fixed in advance, during each step of the DAE solver, 5\% random perturbation of the real and reactive power are added to the system, representing stochastic fluctuations in short-term power demand. Lastly, for a bus equipped with PMU, V and $\theta$ are assumed to be measured and available. COSMIC is able to record down these quantities. 
+
