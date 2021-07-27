@@ -38,7 +38,7 @@ where ${J}_i, i = 1, \dots, 4$ are the four submatrices of the AC power flow Jac
 \begin{equation}
 {J}_1 = \frac{\partial \textbf{P}}{\partial \boldsymbol{\theta}} \,,  {J}_2 = \frac{\partial \textbf{P}}{\partial \mathbf{V}} \,, {J}_3 = \frac{\partial \textbf{Q}}{\partial \boldsymbol{\theta}} \,, {J}_4 = \frac{\partial \textbf{Q}}{\partial \textbf{V}} \,.
 \end{equation}
-In the usual operating range of relatively small angles, real power systems exhibit much stronger interdependences between \textbf{P} and $\boldsymbol{\theta}$ and between \textbf{Q} and \textbf{V} than those between \textbf{P} and \textbf{V} and between \textbf{Q} and $\boldsymbol{\theta}$ \cite{murty2017power}. By neglecting ${J}_2$ and ${J}_3$, (\ref{ch3:eqn:ac_jacobian}) reduces to the decoupled AC power flow equations where the changes in voltage angles and magnitudes are not coupled, i.e. 
+In the usual operating range of relatively small angles, real power systems exhibit much stronger interdependence between \textbf{P} and $\boldsymbol{\theta}$ and between \textbf{Q} and \textbf{V} than those between \textbf{P} and \textbf{V} and between \textbf{Q} and $\boldsymbol{\theta}$ \cite{murty2017power}. By neglecting ${J}_2$ and ${J}_3$, (\ref{ch3:eqn:ac_jacobian}) reduces to the decoupled AC power flow equations where the changes in voltage angles and magnitudes are not coupled, i.e. 
 $$
 {J}_2 = {J}_3 = \mathbf{0}.
 $$
@@ -236,7 +236,7 @@ c = \ln(ARL_0 \times p) \,,
 \label{ssub:additional_remarks}
 % Discuss the relationship between J and topology
 \paragraph{Setting up Outage Scenarios}
-The one-to-one correspondence between the Jacobian and grid topology can be established by looking at how the admittance matrix is constructed in (\ref{ch2:eqn:admittance_matrix}). $\boldsymbol{Y}_{bus}$ is constructed from the bus incidence matrix ${A}$ and the line admittances. For different outage scenarios, the corresponding column of $ A$ need to be set to 0. For example, to set up the $l_{th}$ line outage, the entries in the $l_{th}$ column of ${A}$ are set to 0 to get ${A}_\ell$. The corresponding bus admittance matrix $\boldsymbol{Y}_{bus, \ell}$ is obtained by $\boldsymbol{Y}_{bus, \ell} = {A}_\ell \operatorname{diag}(\mathbf{y}) {A}_\ell^{\top}$. The Jacobian matrix ${J}_{\ell}$ describing the post-outage system is obtained by (\ref{ch3:eqn:elements_J}). 
+The one-to-one correspondence between the Jacobian and grid topology can be established by looking at how the admittance matrix is constructed in (\ref{ch2:eqn:admittance_matrix}). $\boldsymbol{Y}_{bus}$ is constructed from the bus incidence matrix ${A}$ and line admittances. For different outage scenarios, the corresponding column of $ A$ need to be set to 0. For example, to set up the $l_{th}$ line outage, the entries in the $l_{th}$ column of ${A}$ are set to 0 to get ${A}_\ell$. The corresponding bus admittance matrix $\boldsymbol{Y}_{bus, \ell}$ is obtained by $\boldsymbol{Y}_{bus, \ell} = {A}_\ell \operatorname{diag}(\mathbf{y}) {A}_\ell^{\top}$. The Jacobian matrix ${J}_{\ell}$ describing the post-outage system is obtained by (\ref{ch3:eqn:elements_J}). 
 
 For example, a 4-bus power system with five transmission lines might have a bus to branch incidence matrix of \[ {A} = \begin{bmatrix}
 1   &   0   &   1   &   0   &   1 \\
@@ -252,7 +252,7 @@ In offline preparation for line 1 outage scenario, the following is obtained:
 0   &   0   &   0   &   -1  &   -1
 \end{bmatrix} .\] Subsequently, the corresponding admittance matrix can be obtained as $$\boldsymbol{Y}_{bus, \ell_1} = {A_{\ell_1} \operatorname{diag}(\mathbf{y}) A_{\ell_1}}^{\top}.$$
 
-Therefore, no simulation or real data is needed to generate the outage scenarios to set up the monitoring scheme during offline preparation. In real applications, both the bus incidence matrix and the line admittances can be obtained based on the network topology and data during the outage-free period. It will then be sufficient to apply the proposed method.
+Therefore, no simulation or real data is needed to generate the outage scenarios to set up the monitoring scheme during offline preparation. In real applications, both the bus incidence matrix and line admittances can be obtained based on the network topology and data during the outage-free period. It will then be sufficient to apply the proposed method.
 
 % Discuss the effects of limited PMU deployment
 \paragraph{Inaccuracy of Jacobian Due to Unobservable Neighbor Buses}
