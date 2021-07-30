@@ -9,11 +9,11 @@
 \label{ch3:sec:introduction}
 
 % section introduction (end)
-In this chapter, an outage detection scheme making use of approximate transient dynamics is proposed\footnote{This chapter is based on the paper: X. Yang, N. Chen, and C. Zhai, “A control chart approach to power system line outage detection under transient dynamics”, \textit{IEEE Transactions on Power Systems}, vol. 36, no. 1, pp. 127–135, 2021.}. The scheme represents a novel hybrid approach to outage detection where a power system model is the basis for the statistical detection method. A time-variant small-signal relationship between net active power and nodal voltage phase angles is derived from the AC power flow model. Outage detection is then formulated as a statistical distribution change detection problem. A generalized likelihood ratio (GLR) detection scheme is implemented to detect the outage at a pre-specified false alarm rate. 
+In this chapter, an outage detection scheme making use of approximate transient dynamics is proposed\footnote{This chapter is based on the paper: X. Yang, N. Chen, and C. Zhai, “A control chart approach to power system line outage detection under transient dynamics”, \textit{IEEE Transactions on Power Systems}, vol. 36, no. 1, pp. 127–135, 2021.}. The scheme represents a novel hybrid approach to outage detection where a power system model is the building block for the statistical detection method. A time-variant small-signal relationship between net active power and nodal voltage phase angles is derived from the AC power flow model. Outage detection is then formulated as a statistical distribution change detection problem. A generalized likelihood ratio (GLR) detection scheme is implemented to detect the outage at a pre-specified false alarm rate. 
 
-The main contributions of this research work can be summarized in two aspects. Firstly, the power system model retains the non-linear and time-varying characteristics of system transient response that follows after the outage. The system is not assumed to be in a quasi-steady state immediately after the disruption like in many existing methods. From the dynamic outage simulation, it is observed that the transient response could last over 10 seconds. Secondly, the proposed GLR detection scheme can deal with the trade-off between system-wide false alarm rate and detection delay. The ability to decide among different detection thresholds gives operators the flexibility to cater to their system needs. The detection scheme is also computationally efficient, therefore suitable for online implementation in a large network.
+The main contributions of this research work can be summarized in two aspects. Firstly, the power system model retains the non-linear and time-varying characteristics of the system transient response after the outage. The system is not assumed to be in a quasi-steady state immediately after the disruption like many existing methods. From the dynamic outage simulation, it is observed that the transient response could last over 10 seconds. Secondly, the proposed GLR detection scheme can deal with the trade-off between system-wide false alarm rate and detection delay. The ability to decide among different detection thresholds gives operators the flexibility to cater to their system needs. The detection scheme is also computationally efficient, therefore, suitable for online implementation in a network of realistic size.
 
-The remainder of this chapter is organized as follows. Section \ref{ch3:sec:formulation} describes the power system model and the statistical model used to characterize system behaviors before and after the outage. Then, dynamic detection scheme is developed in Section \ref{ch3:sec:detection_scheme}. Effectiveness of the proposed scheme on simulation data of two test power systems are reported and discussed in Section \ref{ch3:sec:results}. Section \ref{ch3:sec:conclusion} concludes this work with two further research directions.
+The remainder of this chapter is organized as follows. Section \ref{ch3:sec:formulation} describes the power system model and the statistical model used to characterize system behaviors before and after the outage. Then, a dynamic detection scheme is developed in Section \ref{ch3:sec:detection_scheme}. The effectiveness of the proposed scheme on simulation data of two test power systems is reported and discussed in Section \ref{ch3:sec:results}. Section \ref{ch3:sec:conclusion} concludes this work with two further research directions.
 
 
 \section{Problem Formulation}
@@ -23,7 +23,7 @@ The remainder of this chapter is organized as follows. Section \ref{ch3:sec:form
 \subsection{Power System Model}
 \label{ch3:sec:power_model}
 
-Given a power system with $N$ buses connected by $L$ transmission lines as mentioned in Section \ref{ch2:sec:ps_model}. Without the loss of generality, bus 1 is assumed to be the reference bus. This bus serves as the angular reference to all other buses, and its phase angle is set to $0^\circ$. The voltage magnitude at the reference bus is also set to $1.0$ per unit (p.u.). Let \textbf{P}, \textbf{Q}, $\boldsymbol{\theta}$, and \textbf{V} represent the $(N-1)$-dimensional column vectors of net active power, net reactive power, voltage angles and magnitudes respectively at all buses except the reference bus. Taking a derivative with respect to time $t$ on both sides of the AC power flow model of (\ref{ch2:eqn:AC_power_flow_model}), then
+Consider a power system with $N$ buses connected by $L$ transmission lines as mentioned in Section \ref{ch2:sec:ps_model}. Without the loss of generality, bus 1 is assumed to be the reference bus. This bus serves as the angular reference to all other buses, and its phase angle is set to $0^\circ$. The voltage magnitude at the reference bus is also set to $1.0$ per unit (p.u.). Let \textbf{P}, \textbf{Q}, $\boldsymbol{\theta}$, and \textbf{V} represent the $(N-1)$-dimensional column vectors of net active power, net reactive power, voltage angles, and magnitudes, respectively, at all buses except the reference bus. Taking a derivative with respect to time $t$ on both sides of the AC power flow model of (\ref{ch2:eqn:AC_power_flow_model}), then
 \begin{equation}
 \label{ch3:eqn:ac_jacobian}
 \left[\begin{array}{c} \frac{\partial \textbf{P}}{\partial t} \\[.5em] \frac{\partial \textbf{Q}}{\partial t}\end{array}\right]
@@ -57,7 +57,7 @@ From here onwards, the subscript $1$ is dropped from ${J}_1$. The off-diagonal a
     & = -\sum_{ n=1 \atop n \neq m}^{N} \text{V}_{m} \text{V}_{n} \text{Y}_{m n} \sin \left( \theta_{m} - \theta_{n} - \alpha_{m n} \right) \,. \label{ch3:eqn:elements_J_diag} 
 \end{align}
 \end{subequations}
-Note that $t \in [0, \infty)$ is implicit in the continuous-time quantities $\textbf{P}, \textbf{V}$ and $\boldsymbol{\theta}$. Accordingly, their discrete counterparts are defined as $\textbf{P}_k, \textbf{V}_k$ and $\boldsymbol{\theta}_k$ at time $t_k$ for $k = 1, 2, \dots$. For PMU devices with a sampling frequency of 30 Hz, 
+Note that $t \in [0, \infty)$ is implicit in the continuous-time quantities $\textbf{P}, \textbf{V}$, and $\boldsymbol{\theta}$. Accordingly, their discrete counterparts are defined as $\textbf{P}_k, \textbf{V}_k$, and $\boldsymbol{\theta}_k$ at time $t_k$ for $k = 1, 2, \dots$. For PMU devices with a sampling frequency of 30 Hz, 
 $$
 \Delta t = t_{k} - t_{k-1} = 1/30 \,s \,.
 $$  
@@ -78,15 +78,15 @@ i.e. the active power mismatch and difference between two consecutive angle meas
 % Our contribution: dynamic modeling
 The key feature of the proposed model lies in the ${J}$ matrix in (\ref{ch3:eqn:small_signal_model}). The matrix changes with $\boldsymbol{\theta}$, which in turn changes with time. Therefore, it retains the non-linear and dynamic nature of the AC power system.  
 
-Methods relying on a static relationship between $\Delta\textbf{P}$ and $\Delta\boldsymbol{\theta}$ make three further assumptions about the system \cite{Tate2008, Chen2016}: (1) system operates with a flat voltage profile, i.e. 
+Methods relying on a static relationship between $\Delta\textbf{P}$ and $\Delta\boldsymbol{\theta}$ make three further assumptions about the system \cite{Tate2008, Chen2016}: (1) System operates with a flat voltage profile, i.e. 
 $$
 \text{V}_m \approx \text{V}_n \approx 1.0 \, \text{p.u.} \,,
 $$
 (2) and with approximately homogeneous bus angles across the network, i.e. 
 $$
-\cos(\theta_m - \theta_n) \approx 1, \sin(\theta_m - \theta_n) \approx 0 \,,
+\cos(\theta_m - \theta_n) \approx 1, \sin(\theta_m - \theta_n) \approx 0 \,.
 $$ 
-(3) the reactive property of a line is much more significant than its resistive property, i.e. 
+(3) The reactive property of a line is much more significant than its resistive property, i.e. 
 $$
 B_{mn} \gg G_{mn} \,,
 $$ 
@@ -429,7 +429,7 @@ Line    & 1/24 & 2 & 7 & 30 \\ \hline
 
 \section{Conclusion}
 \label{ch3:sec:conclusion}
-In this work, a real-time dynamic line outage detection and identification scheme is developed based on the AC power flow model and GLR scheme. A time-variant small-angle relationship between bus voltage angles and active power injections is derived. The pre- and post-outage statistical models of the angle variations are obtained. The proposed scheme is effective in both detection and identification. It is also scalable, as seen from the results in the 2383-bus system. 
+This chapter develops a real-time dynamic line outage D\&I scheme based on the AC power flow model and GLR scheme. A time-variant small-angle relationship between bus voltage angles and active power injections is derived. The pre- and post-outage statistical models of the angle variations are obtained. The proposed scheme is effective in both detection and identification. It is also scalable, as seen from the results in the 2383-bus system. 
 
 For further research, it might be worth investigating the optimal number and placement of a limited number of PMUs. As seen from Section \ref{ch3:sec:results}, there is a varying level of detection delays due to PMU placement. The number of PMUs needed to achieve a certain level of identification accuracy is also worth investigating. In addition, incorporating generator dynamics into the system model might prove useful as the detailed physical model could provide an even better direction for outage detection and identification. This direction of research is pursued in Chapter \ref{ch:detection_using_generator_dynamics}.
 
