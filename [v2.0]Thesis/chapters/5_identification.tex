@@ -98,7 +98,7 @@ where $F$ is defined by
     F = S J^{-1} A \,.
 \end{equation}
 Therefore, $F$ is a $K \times L$ outage signature map determined by PMU locations, system operating states, and topology. Each column of $F$, i.e., $F_{l}, \ell \in \mathcal{L}$ represents the incremental effect of line $l$ outage on all bus voltage angles captured by PMUs. 
-\begin{figure}[!htpb]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=1\linewidth]{\Pic{pdf}{feature_map}}
 \caption{\textit{An example of the $19 \times 46$ signature map constructed using a random placement of 19 PMUs in the New England 39-bus system with 46 transmission lines. Each column corresponds to a single line outage and its incremental impact on PMU-equipped bus voltage phase angles.}}
@@ -325,7 +325,7 @@ Fig. \ref{ch5:fig:double_outage} shows the identification results for the double
 
 \subsubsection{Effect of minimal diagnosable cluster}  
 
-\begin{table}[!htpb]
+\begin{table}[!t]
 \caption{Impact of Minimal Diagnosable Cluster Threshold on Identification Precision-Accuracy Trade-off Using Lasso+MDC}
 \label{ch5:tab:impact_mdc_threshold}
 \centering
@@ -350,7 +350,7 @@ Therefore, augmenting solutions with MDCs could substantially improve identifica
 
 \subsubsection{Effect of measurement noise} 
 
-\begin{figure}[!htpb]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=1\linewidth]{\Pic{pdf}{impact_noise}}
 \caption{\textit{Impact of measurement noise on identification performance of the proposed method. Performance using data with noise standard deviation varying from 0\% to 10\% of $|\Delta\boldsymbol{\theta}|$ is reported by median accuracy of single- and double-line outages using Lasso and Lasso+MDC. }}

@@ -236,7 +236,11 @@ c = \ln(ARL_0 \times p) \,,
 \label{ssub:additional_remarks}
 % Discuss the relationship between J and topology
 \paragraph{Setting up Outage Scenarios}
-The one-to-one correspondence between the Jacobian and grid topology can be established by looking at how the admittance matrix is constructed in (\ref{ch2:eqn:admittance_matrix}). $\boldsymbol{Y}_{bus}$ is constructed from the bus incidence matrix ${A}$ and line admittances. For different outage scenarios, the corresponding column of $ A$ need to be set to 0. For example, to set up the $l_{th}$ line outage, the entries in the $l_{th}$ column of ${A}$ are set to 0 to get ${A}_\ell$. The corresponding bus admittance matrix $\boldsymbol{Y}_{bus, \ell}$ is obtained by $\boldsymbol{Y}_{bus, \ell} = {A}_\ell \operatorname{diag}(\mathbf{y}) {A}_\ell^{\top}$. The Jacobian matrix ${J}_{\ell}$ describing the post-outage system is obtained by (\ref{ch3:eqn:elements_J}). 
+The one-to-one correspondence between the Jacobian and grid topology can be established by looking at how the admittance matrix is constructed in (\ref{ch2:eqn:admittance_matrix}). $\boldsymbol{Y}_{bus}$ is constructed from the bus incidence matrix ${A}$ and line admittances. For different outage scenarios, the corresponding column of $ A$ need to be set to 0. For example, to set up the $l_{th}$ line outage, the entries in the $l_{th}$ column of ${A}$ are set to 0 to get ${A}_\ell$. The corresponding bus admittance matrix $\boldsymbol{Y}_{bus, \ell}$ is obtained by 
+$$
+\boldsymbol{Y}_{bus, \ell} = {A}_\ell \operatorname{diag}(\mathbf{y}) {A}_\ell^{\top} \,.
+$$ 
+The Jacobian matrix ${J}_{\ell}$ describing the post-outage system is obtained by (\ref{ch3:eqn:elements_J}). 
 
 For example, a 4-bus power system with five transmission lines might have a bus to branch incidence matrix of \[ {A} = \begin{bmatrix}
 1   &   0   &   1   &   0   &   1 \\
@@ -348,13 +352,13 @@ For outages with almost zero detection delay, they are lines where either PMUs a
 
 Another factor is the power grid topology. The scheme recorded shorter delays for line 2, 14, 15, and 30. It is observed that these outages produced severe disturbances. Line 2, 14, and 15 connect to a generator bus, and line 30 connects a subnetwork to the main network. On the other hand, outages at line 5, 11, 13, and 26 produced weaker and shorter disturbances, which are more difficult to detect. Consequently, they recorded longer detection delays. See Fig. \ref{ch3:fig:boxplot_delay_30day_critical} for the comparison.
 
-\begin{figure}[!htpb]
+\begin{figure}[!t]
     \centering
     \includegraphics[width=\linewidth]{\Pic{pdf}{boxplot_delay_30day_pmu}}
     \caption{\textit{Boxplot of the empirical distributions of detection delay in seconds for lines with at least 1 PMU nearby.}}
     \label{ch3:fig:boxplot_delay_30day_pmu}
 \end{figure}
-\begin{figure}[!htpb]
+\begin{figure}[!t]
     \centering
     \includegraphics[width=\linewidth]{\Pic{pdf}{boxplot_delay_30day_critical}}
     \caption{\textit{Boxplot of the empirical distributions of detection delay in seconds for lines at different topological locations.}}
@@ -440,13 +444,13 @@ For further research, it might be worth investigating the optimal number and pla
 A simulation example is shown here to illustrate the working of the detection scheme when the outage creates an unstable and transient system. In the 39-bus system, line 37 outage creates large disturbances throughout the system, as shown in Figure \ref{ch3:fig:line_37_outage}. From the onset of the outage to the end of the simulation, voltage phase angles at most buses show no significant sign of stabilization. The detection scheme is able to detect the outage immediately, as shown in Figure \ref{ch3:fig:line_37_detection}. In this case, the monitoring statistic records a significantly large value, indicating that the strength of the signals is strong. 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=1\linewidth]{\Pic{pdf}{line_37_outage}}
+\includegraphics[width=.8\linewidth]{\Pic{pdf}{line_37_outage}}
 \caption{\textit{The progression of bus voltage phase angles after the outage of line 37. Each line represents the voltage phase angles from one of the buses.}}
 \label{ch3:fig:line_37_outage}
 \end{figure}
 \begin{figure}[!t]
 \centering
-\includegraphics[width=1\linewidth]{\Pic{pdf}{line_37_detection}}
+\includegraphics[width=.8\linewidth]{\Pic{pdf}{line_37_detection}}
 \caption{\textit{The progression of the monitoring statistic for line 37 outage.}}
 \label{ch3:fig:line_37_detection}
 \end{figure}

@@ -243,13 +243,13 @@
 
   \begin{center}
     \blocklt{\@title}\par
-    \vspace{36pt minus 4pt}
+    \vspace{80pt minus 4pt}
     by \par
     \blocklt{\@author}
     \ifdefined \@prevdegrees
       \par\vspace{-10pt}\textit{(\@prevdegrees)}
     \fi\par
-    \vspace{36pt minus 8pt}
+    \vspace{80pt minus 8pt}
     \blocklt{A thesis submitted for the degree of} \par
     \blocklt{\@degree}\par
     % in \par

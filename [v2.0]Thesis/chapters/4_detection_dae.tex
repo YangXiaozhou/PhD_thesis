@@ -153,7 +153,7 @@ A system-wide detection scheme that utilizes the output of the SSM detailed in t
 \Delta\textbf{P}_{k} + \boldsymbol{\eta}_k \sim N(\mathbf{0}, \sigma^2\mathbf{I}) \,.
 \end{equation}
 When a line trips in the power grid, there are two ways that the above relationship will be violated. First, as the system topology changes, the outage-free AC power flow equation (\ref{ch4:eqn:ac_pf}) used to compute the net active power is no longer valid. In particular, the admittance corresponding to the tripped line becomes zero; the bus admittance matrix $\boldsymbol{Y}_{bus}$ changes to a new one that reflects the post-outage system topology. Thus $\Delta\textbf{P}$ in (\ref{ch4:eqn:normal_distribution}) does not represent the actual net active power changes anymore. Second, line outage events trigger a period of transient re-balancing in the system where generators respond to the power imbalance caused by the outage. The immediately affected buses also experience an abrupt change in the net active power due to the outage. As a combination of these effects, the relationship of (\ref{ch4:eqn:normal_distribution}) will be violated. For example, using data simulated from the IEEE 39-bus test system, Fig. \ref{ch4:fig:signals_comparison} shows the contrast between the signals from a normal system and that with an outage at the 3rd second. 
-\begin{figure}[!htpb]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=1\linewidth]{\Pic{pdf}{signals_comparison}}
 \caption{\textit{Comparison of the output signals with no outage and with line 12 outage. A subset of output signals significantly deviated from the normal mean level and exhibited strong non-Gaussian oscillations.}}
@@ -389,13 +389,14 @@ To illustrate the working of the detection scheme, line 18 outage is used as an 
 \end{figure}
 One significant advantage of the proposed detection scheme is the ability to break down the output signals and pinpoint the components leading to an early outage detection. Fig. \ref{ch4:fig:detection_signal_breakdown} shows such a breakdown for line 18 outage. The upper two components are the generator bus information, and the lower-left one is the load bus information. They register different signal strength levels depending on the outage location, e.g., the magnitude of initial shock and the transient oscillation duration. The proposed scheme can detect outages as long as one of them picks up significant changes. It is clear in this case that the signals from monitored load buses do not contribute meaningfully to the outage detection. Instead, the changes in generated active power and net power injection on generator buses display significant abnormal fluctuations, leading to the outage detection.
 
-The typical progression of the monitoring statistic, $T_{k}^2$, computed via MEWMA from the output signals is shown in Fig. \ref{ch4:fig:line_18_monitor_statistics}. Before the outage, the statistic remains close to zero. After the outage at the 3rd second, it increases rapidly and crosses the threshold. Thus, the scheme raises an outage alarm, and no detection delay is incurred. 
-\begin{figure}[!thpb]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=1\linewidth]{\Pic{pdf}{line_18_monitor_statistics}}
 \caption{\textit{Progression of MEWMA monitoring statistic for detecting line 18 outage. After the outage onset, the monitoring statistic crosses the detection threshold immediately and remains high afterward. The outage is successfully detected with no detection delay.}}
 \label{ch4:fig:line_18_monitor_statistics}
 \end{figure}
+The typical progression of the monitoring statistic, $T_{k}^2$, computed via MEWMA from the output signals is shown in Fig. \ref{ch4:fig:line_18_monitor_statistics}. Before the outage, the statistic remains close to zero. After the outage at the 3rd second, it increases rapidly and crosses the threshold. Thus, the scheme raises an outage alarm, and no detection delay is incurred. 
+
 
 \subsection{Results and Discussion} 
 This section shows the effectiveness of the proposed unified scheme using average performance computed from 1000 random simulations of each line outage. The performance comparison with other state-of-the-art methods is also presented.
@@ -435,14 +436,14 @@ In some related work and Chapter \ref{ch:detection_using_approximate_dynamics} o
 
 \paragraph{Comparison with Other Methods}
 \begin{table}[!htpb]
-\caption{Detection Delay Comparison of Different Detection Schemes}
+\caption{Detection Delay (s) Comparison of Different Detection Schemes}
 \label{ch4:tab:delay_comparison_39}
 \centering
 \begin{tabular}{r|llll} 
 \hline
 \hline
 \multicolumn{1}{l|}{}     & \multicolumn{4}{c}{Average Detection Delay (s.d.)}  \\ \hline
-\multicolumn{1}{c|}{Line} & DC (full) & Subspace (full)  & AC &  Unified \\ \hline
+\multicolumn{1}{c|}{Line} & DC - full & Subspace - full  & AC &  Unified \\ \hline
 2 & 1.165 (0.006)   & 2.822 (1.924) & 0.283 (0.263) & \textbf{0.012} (0.183) \\
 6 & \textendash     & 3.060 (2.011) & 0.246 (0.129) & \textbf{0.052} (0.463) \\
 11& \textbf{0} (0)  & 3.048 (1.969) & 0.602 (0.205) & 0.058 (0.077) \\
