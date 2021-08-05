@@ -260,7 +260,7 @@ Therefore, no simulation or real data is needed to generate the outage scenarios
 
 % Discuss the effects of limited PMU deployment
 \paragraph{Inaccuracy of Jacobian Due to Unobservable Neighbor Buses}
-For a limited PMU deployment, there may be some inaccuracies in the computed diagonal elements of ${J}^o(\boldsymbol{\theta}^o_{k-1})$. In particular, if there is no PMU on bus $n$, a neighbor of bus $m$, measurements $\text{V}_{n}$ and $\theta_{n}$ would not be available. Therefore, the term, $-\text{V}_{m} \text{V}_{n} \text{Y}_{m n} \sin \left(\theta_{m}-\theta_{n}-\alpha_{m n}\right)$, would not be computable and is treated as 0 for the summation in (\ref{ch3:eqn:elements_J_diag}). The issue could be alleviated by carefully designing the PMU placement (locations). One possible design rule is to make sure that each observable bus has at least one observable neighbor bus. In general, PMU locations will influence the efficiency of outage detection. It is also of interest to practitioners to find the optimal placement of PMUs so that even with limited PMUs, outages can be detected as quickly as possible. However, the placement problem is beyond the scope of this work, and it will studied in future research. 
+For a limited PMU deployment, there may be some inaccuracies in the computed diagonal elements of ${J}^o(\boldsymbol{\theta}^o_{k-1})$. In particular, if there is no PMU on bus $n$, a neighbor of bus $m$, measurements $\text{V}_{n}$ and $\theta_{n}$ would not be available. Therefore, the term, $-\text{V}_{m} \text{V}_{n} \text{Y}_{m n} \sin \left(\theta_{m}-\theta_{n}-\alpha_{m n}\right)$, would not be computable and is treated as 0 for the summation in (\ref{ch3:eqn:elements_J_diag}). The issue could be alleviated by carefully designing the PMU placement (locations). One possible design rule is to make sure that each observable bus has at least one observable neighbor bus. In general, PMU locations will influence the efficiency of outage detection. It is also of interest to practitioners to find the optimal placement of PMUs so that even with limited PMUs, outages can be detected as quickly as possible. However, the placement problem is beyond the scope of this work, and it will be studied in future research. 
 
 \paragraph{Identification of Tripped Lines}
 Following detection, the actual lines tripped need to be identified so that follow-up, potentially automatic, actions can be taken. 
@@ -397,13 +397,13 @@ Line    & Scheme & 1/24 & 2 & 7 & 30 \\ \hline
 The identification performance of the proposed scheme is analyzed by comparing the true outage line with the identified line. The results are shown in Fig. \ref{ch3:fig:identification_full_top3} and Fig. \ref{ch3:fig:identification_heatmap}. 
 \begin{figure}[!t]
     \centering
-    \includegraphics[width=.8\linewidth]{\Pic{pdf}{identification_full_top3}}
+    \includegraphics[width=\linewidth]{\Pic{pdf}{identification_full_top3}}
     \caption{\textit{Heat map of the identification accuracy of the proposed method in the 39-bus system with a full PMU deployment.}}
     \label{ch3:fig:identification_full_top3}
 \end{figure}
 \begin{figure}[!t]
     \centering
-    \includegraphics[width=.8\linewidth]{\Pic{pdf}{identification_top3_tree_10pmu}}
+    \includegraphics[width=\linewidth]{\Pic{pdf}{identification_top3_tree_10pmu}}
     \caption{\textit{Heat map showing the identification accuracy of the proposed method in the 39-bus system with 10 PMUs deployed.}}
     \label{ch3:fig:identification_heatmap} 
 \end{figure}
@@ -444,13 +444,13 @@ For further research, it might be worth investigating the optimal number and pla
 A simulation example is shown here to illustrate the working of the detection scheme when the outage creates an unstable and transient system. In the 39-bus system, line 37 outage creates large disturbances throughout the system, as shown in Figure \ref{ch3:fig:line_37_outage}. From the onset of the outage to the end of the simulation, voltage phase angles at most buses show no significant sign of stabilization. The detection scheme is able to detect the outage immediately, as shown in Figure \ref{ch3:fig:line_37_detection}. In this case, the monitoring statistic records a significantly large value, indicating that the strength of the signals is strong. 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=.8\linewidth]{\Pic{pdf}{line_37_outage}}
+\includegraphics[width=\linewidth]{\Pic{pdf}{line_37_outage}}
 \caption{\textit{The progression of bus voltage phase angles after the outage of line 37. Each line represents the voltage phase angles from one of the buses.}}
 \label{ch3:fig:line_37_outage}
 \end{figure}
 \begin{figure}[!t]
 \centering
-\includegraphics[width=.8\linewidth]{\Pic{pdf}{line_37_detection}}
+\includegraphics[width=\linewidth]{\Pic{pdf}{line_37_detection}}
 \caption{\textit{The progression of the monitoring statistic for line 37 outage.}}
 \label{ch3:fig:line_37_detection}
 \end{figure}
