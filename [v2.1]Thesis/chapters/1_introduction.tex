@@ -54,7 +54,7 @@ PMU is the foundation for many D\&I schemes. However, PMUs are only progressivel
 Therefore, a limited PMU deployment, in terms of the number and location, impacts the outage detection scheme’s effectiveness. In particular, line outages that happen far away from buses with PMUs would register mild signals in the data, leading to a longer detection delay or missed detection~\cite{yang2020control}. It remains a challenge to design a detection scheme robust to the location of the PMUs and outages. 
 
 % identification need to overcome ambiguity due to limited sensor
-On the other hand, a limited coverage also leads to increased identification difficulty. Pre- and post-outage states at different parts of the system are needed to discriminate outages of one location from another. Having unobservable buses might lead to the signatures of some outages being missed out. This loss of information might lead to some outages of different locations being indistinguishable from one another~\cite{Wu2015,Costilla-Enriquez2019,yang2021particle}. Hence, an effective outage identification scheme must overcome the ambiguity issue caused by a limited PMU deployment.
+On the other hand, a limited coverage also leads to increased identification difficulty. Pre- and post-outage states at different parts of the system are needed to discriminate outages of one location from another. Having unobserved buses might lead to the signatures of some outages being missed out. This loss of information might lead to some outages of different locations being indistinguishable from one another~\cite{Wu2015,Costilla-Enriquez2019,yang2021particle}. Hence, an effective outage identification scheme must overcome the ambiguity issue caused by a limited PMU deployment.
 
 
 
@@ -93,7 +93,7 @@ A separate line of work makes use of the direct current (DC) power flow model, w
 This line of work does not require all buses to be monitored by a PMU. However, the steady-state approximation would not be sufficient at describing the actual system dynamic behavior following an outage. 
 % subsubsection by_approach (end)
 
-Therefore, existing methods do not consider the transient dynamics following an outage or require a full PMU deployment. There is minimal work on detection schemes that allow unobservable buses and exploit the system's transient response to an outage for faster detection.
+Therefore, existing methods do not consider the transient dynamics following an outage or require a full PMU deployment. There is minimal work on detection schemes that consider unobserved buses and exploit the system's transient response to an outage for faster detection.
 
 \subsubsection{By System Dynamics} % (fold)
 \label{ssub:by_dynamics}

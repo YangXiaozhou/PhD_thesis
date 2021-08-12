@@ -168,7 +168,7 @@ where $\boldsymbol{Z}_0 = \mathbf{0}$ and $\lambda$ is a pre-defined smoothing p
 $$
 0<\lambda \le 1 \,.
 $$
-The statistic under monitoring is then constructed similiar to that of a Hotelling's $T^2$ statistic:
+The statistic under monitoring is then constructed similar to that of a Hotelling's $T^2$ statistic:
 \begin{equation}
 \label{ch4:eqn:ewma_T}
 T^2_k = \boldsymbol{Z}_k^T\Sigma_{\boldsymbol{Z}_k}^{-1}\boldsymbol{Z}_k \,,
@@ -185,11 +185,6 @@ D = \inf\lbrace k\ge1 : T^2_k \ge H \rbrace \,.
 Here $D$ is the stopping time of the proposed outage detection scheme. The difference between $D$ and the onset time of the outage is the detection delay. The proposed scheme's prime objective is to minimize the detection delay should an outage happen at an a priori unknown location.
 
 A common way to quantify the detection scheme's sensitivity is through the so-called average run length to a false alarm ($ARL_0$), i.e., the number of samples required to produce a false alarm when the system is outage-free. MEWMA-type control chart allows system operators to specify an appropriate sensitivity level by selecting $\lambda$ and $H$. Charts with lower values of $\lambda$ are generally more robust against non-Gaussian distributions and have better detection performance for small to medium shifts \cite{montgomery2007introduction}. Given $\lambda$ and a false alarm constraint $ARL_0$, the detection threshold $H$ can be determined by solving an integral equation of Theorem 2 in \cite{rigdon1995integral}\footnote{The equation can be solved using various numerical algorithms or Markov chain approximation, and this process can be done offline. Interested readers can refer to \cite{knoth2017arl} for a detailed description of the computation procedure required.}. The selection of the parameter values and their impact on the detection scheme will be presented in the simulation studies section. 
-% \begin{equation}
-% \label{ch4:eqn:ewma_arl}
-% L\left(0 \mid H\right)=1+\int_{0}^{H \lambda /(2-\lambda)} L\left(y \mid H\right) f\left(y \mid \mathbf{z}_{0}^{\prime} \mathbf{z}_{0}=0\right) d y \,,
-% \end{equation}
-% where $f\left(y \mid \mathbf{z}_{0}^{\prime} \mathbf{z}_{0}=0\right)$ is the p.d.f. of the chi-square distribution with a degree of freedom equal to the dimension of $\Sigma_{\boldsymbol{Z}_k}$.
 
 
 
@@ -225,7 +220,7 @@ When the new measurement $y_k$ arrives, the prior distribution is corrected by u
 $$
 w_k^{i} \propto  w_{k-1}^{i} \cdot g(\boldsymbol{y}_k | \boldsymbol{x}_k^{i}) \,.
 $$
-The intuitive interpretation is that the particles are reweighted based on their compatibility with the actual system measurement. The approximation of the posterior distribution by these particle-weight pairs is consistent as $N_p \rightarrow +\infty$ at a standard Monte Carlo rate of $\mathcal{O}(N_{p}^{-1/2})$ guaranteed by the Central Limit Theorem \cite{doucet2009tutorial}. 
+The intuitive interpretation is that the particles are re-weighted based on their compatibility with the actual system measurement. The approximation of the posterior distribution by these particle-weight pairs is consistent as $N_p \rightarrow +\infty$ at a standard Monte Carlo rate of $\mathcal{O}(N_{p}^{-1/2})$ guaranteed by the Central Limit Theorem \cite{doucet2009tutorial}. 
 
 % How to overcome the well-known degeneracy problem
 % with systematic resampling
@@ -235,11 +230,11 @@ A well-known problem of PF is that the weights will become highly degenerate ove
 \end{equation}
 In the extreme case where one particle has the weight of 1 and all others of 0, ESS will be 1. On the other hand, ESS is $N_p$ when every particles has an equal weight of $N_p^{-1}$.
 
-A resampling move can be used to mitigate the degeneracy problem. The central idea is to duplicate particles with higher weights and remove the others, thus focusing computational efforts on regions of higher probability. The systematic resampling method is used in this case as it usually outperforms other resampling algorithms \cite{doucet2009tutorial}. When ESS falls below a threshold, typically $N_p/2$, $N_p$ particles are resampled from the existing ones. The number of offsprings, $N_k^{i}$, is assigned to each particle $\boldsymbol{x}_k^i$ such that 
+A resampling move can be used to mitigate the degeneracy problem. The central idea is to duplicate particles with higher weights and remove the others, thus focusing computational efforts on regions of higher probability. The systematic resampling method is used in this case as it usually outperforms other resampling algorithms \cite{doucet2009tutorial}. When ESS falls below a threshold, typically $N_p/2$, $N_p$ particles are resampled from the existing ones. The number of offspring, $N_k^{i}$, is assigned to each particle $\boldsymbol{x}_k^i$ such that 
 $$
 \sum_{i=1}^{N_p}N_k^{i} = N_p \,.
 $$
-The systematic sampling proceeds as follows to select the number of offsprins $N_k^{i}$. A random number $U_{1}$ is drawn from the uniform distribution 
+The systematic sampling proceeds as follows to select the number of offspring $N_k^{i}$. A random number $U_{1}$ is drawn from the uniform distribution 
 $$
 \mathcal{U}\left[0, {N_p}^{-1}\right] \,.
 $$
@@ -296,7 +291,7 @@ $$
 \section{Additional Remarks} % (fold)
 \label{ssub:additional_remarks}
 \subsection{Limited PMU Deployment}
-Many power systems have to work with a limited number of PMUs, i.e., some buses are not equipped with a PMU. The detection scheme proposed here is also applicable in this case since the signal under monitoring, $\boldsymbol{Y}$, can be adjusted to include only buses with PMUs. In particular, $\Delta\textbf{P}_{g}$ can include those generator buses with PMUs. $\Delta\textbf{P}$ can be calculated for load buses with fully observable neighbor buses. The impact of an unobservable neighbor bus on the computation of the bus net active power would be an unknown term, $\text{V}_j \text{Y}_{ij} \cos (\theta_i - \theta_j - \alpha_{ij})$, in the AC power flow equation since the neighbor bus' $\theta_j$ and $\text{V}_j$ are not available. While this impact can be mitigated through a careful selection of the PMU locations, unlike \cite{Chen2016} and \cite{yang2020control}, the proposed detection scheme is effective when most generator buses are monitored, a result corroborated by the simulation studies in this work, e.g., see Fig. \ref{ch4:fig:detection_delay_distribution}. Also, the number of generator buses is typically much smaller than the total number of buses.
+Many power systems have to work with a limited number of PMUs, i.e., some buses are not equipped with a PMU. The detection scheme proposed here is also applicable in this case since the signal under monitoring, $\boldsymbol{Y}$, can be adjusted to include only buses with PMUs. In particular, $\Delta\textbf{P}_{g}$ can include those generator buses with PMUs. $\Delta\textbf{P}$ can be calculated for load buses with fully observable neighbor buses. The impact of an unobserved neighbor bus on the computation of the bus net active power would be an unknown term, $\text{V}_j \text{Y}_{ij} \cos (\theta_i - \theta_j - \alpha_{ij})$, in the AC power flow equation since the neighbor bus' $\theta_j$ and $\text{V}_j$ are not available. While this impact can be mitigated through a careful selection of the PMU locations, unlike \cite{Chen2016} and \cite{yang2020control}, the proposed detection scheme is effective when most generator buses are monitored, a result corroborated by the simulation studies in this work, e.g., see Fig. \ref{ch4:fig:detection_delay_distribution}. Also, the number of generator buses is typically much smaller than the total number of buses.
 
 \subsection{Unknown System Parameter Estimation}
 In this work, it is assumed that the system parameters in the power system SSM are known and static; therefore, the PF's state estimation is reliable. In real-world applications, these parameters may be known but slow-varying due to factors like system degradation. While parameter estimation in a non-linear system is generally a difficult problem and outside the scope of this paper, there is a natural extension from the particle filtering framework that can tackle the problem. An online expectation maximization (EM) algorithm based on the particles can be implemented to learn the parameters as data arrives sequentially in real-time. The EM algorithm is an iterative optimization method that finds the maximum likelihood estimates of the parameters in problems where hidden variables are present \cite{dempster1977maximum}. This basic EM algorithm can be reformulated to perform the estimation online using the so-called sequential Monte Carlo forward smoothing framework when the complete-data density, i.e., $p_\vartheta(\boldsymbol{x}_{0:k}, {\boldsymbol{y}}_{0:k})$ where $\vartheta$ denote the set of unknown parameters, is from the exponential family \cite{yildirim2013online}.
@@ -347,7 +342,7 @@ This section shows the effectiveness of the proposed unified scheme using averag
 \caption{\textit{Comparison of the empirical likelihood of detection for all simulated outages under different $\lambda$s of MEWMA. While 28 out of the 35 line outages can be detected with over 90\% likelihood, larger values of $\lambda$ tend to have a higher detection rate. A small group of outages is difficult to detect regardless of the $\lambda$ value.}}
 \label{ch4:fig:detection_rate}
 \end{figure}
-Fig. \ref{ch4:fig:detection_rate} presents the empirical likelihood of detection for all 35 simulated line outages, which is the percentage of successful detections over 1000 simulations. For both small and large values of $\lambda$, the detection scheme can detect 28 out of 35 outages over 90\% of the time. In some cases, it can be seen that larger values of $\lambda$ tend to have a better detection rate, i.e., line 8, 13, 15, and 26. The reason is that these line outages produce more severe initial shock relative to their after-outage oscillation. Hence, larger values of $\lambda$ help to capture the immediate shock. Also, a small group of outages is challenging to detect regardless of the $\lambda$ value, i.e., line 2, 6, 19, 35, and 36. Diagnostic inspection of these cases' output signals reveals that they generally produce weak system disturbances, especially from the generators, hence often not triggering an outage alarm. The weak disturbance might be explained by the fact that these lines are connected to buses that serve zero or small loads. 
+Fig. \ref{ch4:fig:detection_rate} presents the empirical likelihood of detection for all 35 simulated line outages, which is the percentage of successful detection over 1000 simulations. For both small and large values of $\lambda$, the detection scheme can detect 28 out of 35 outages over 90\% of the time. In some cases, it can be seen that larger values of $\lambda$ tend to have a better detection rate, i.e., line 8, 13, 15, and 26. The reason is that these line outages produce more severe initial shock relative to their after-outage oscillation. Hence, larger values of $\lambda$ help to capture the immediate shock. Also, a small group of outages is challenging to detect regardless of the $\lambda$ value, i.e., line 2, 6, 19, 35, and 36. Diagnostic inspection of these cases' output signals reveals that they generally produce weak system disturbances, especially from the generators, hence often not triggering an outage alarm. The weak disturbance might be explained by the fact that these lines are connected to buses that serve zero or small loads. 
 
 
 \paragraph{Detection Delay}
