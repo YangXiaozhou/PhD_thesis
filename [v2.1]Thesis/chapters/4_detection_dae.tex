@@ -49,7 +49,7 @@ for $i = 1, \dots, N$, subject to a random demand fluctuation $\epsilon_i$ as me
 \begin{equation}
 \label{ch4:eqn:ac_pf}
 \text{P}_{i} = \text{V}_i \sum_{j=1}^{N} \text{V}_j \text{Y}_{ij} \cos (\theta_i - \theta_j - \alpha_{ij}) \,,
-\end{equation} following the AC power flow equation of (\ref{ch2:eqn:AC_power_flow_P}). Note that for load buses ${P}_{g, i} = 0, i \in \mathcal{N}_l$ in (\ref{ch4:eqn:power_balance}). The total active power generated and load demand of the network are assumed to be balanced as well. This relationship will be the basis for the unified outage detection scheme described in the next section. 
+\end{equation} following the AC power flow equation of (\ref{ch2:eqn:AC_power_flow_P}). Note that for load buses $\text{P}_{g, i} = 0, i \in \mathcal{N}_l$ in (\ref{ch4:eqn:power_balance}). The total active power generated and load demand of the network are assumed to be balanced as well. This relationship will be the basis for the unified outage detection scheme described in the next section. 
 
 %%%%%%%%%%%%%%% Discrete system and measurement equations %%%%%%%%%%%%%%%
 Define the discrete counterparts of the system model via a first-order difference discretization by Euler's formula, i.e., let $\delta_{k+1} = \delta_{t_{k+1}}$ for $k = 1, 2, \dots$, and 
@@ -207,7 +207,8 @@ $$
 $$ where $N_p$ is the number of particles, the posterior distribution at time $k-1$ is approximated by weighted Dirac delta functions as
 \begin{equation}
 \pi(\boldsymbol{X}_{k-1} | \boldsymbol{y}_{0:k-1}) \approx \sum_{i=1}^{N_{p}} w_{k-1}^{i} \cdot \delta(\boldsymbol{X}_{k-1}-\boldsymbol{x}_{k-1}^{i}) \,,
-\end{equation} where $\delta (\cdot)$ is the Dirac delta function, and the weights are normalized such that $\sum_{i=1}^{N_{p}} w_{k-1}^{i} = 1$. The algorithm starts by propagating particles from time $k-1$ to time $k$ through the state transition function in (\ref{ch4:eqn:de_discrete}), i.e., the prediction step. That means, new particles $\{\boldsymbol{x}_k^{i}\}_{1\leq i \leq N_p}$ are sampled from the state transition density $f(\boldsymbol{X}_k|\boldsymbol{x}_{k-1}^{i})$. The predicted states then have a prior distribution approximated by 
+\end{equation} 
+where $\delta (\cdot)$ is the Dirac delta function, and the weights are normalized such that $\sum_{i=1}^{N_{p}} w_{k-1}^{i} = 1$. The algorithm starts by propagating particles from time $k-1$ to time $k$ through the state transition function in (\ref{ch4:eqn:de_discrete}), i.e., the prediction step. That means, new particles $\{\boldsymbol{x}_k^{i}\}_{1\leq i \leq N_p}$ are sampled from the state transition density $f(\boldsymbol{X}_k|\boldsymbol{x}_{k-1}^{i})$. The predicted states then have a prior distribution approximated by 
 \begin{equation}
 \label{ch4:eqn:prediction}
 \pi(\boldsymbol{X}_k | \boldsymbol{Y}_{0: k-1}) \approx \sum_{i=1}^{N_{p}} w_{k-1}^{i} \cdot \delta(\boldsymbol{X}_k-\boldsymbol{x}_k^{i}) \,.
