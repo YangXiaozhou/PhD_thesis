@@ -1,0 +1,86 @@
+\SetPicSubDir{1_introduction}
+
+\chapter{Introduction}
+\label{ch:introduction}
+\vspace{2em}
+
+% Overview of critical infrastructures
+
+Critical infrastructures (CIs) are essential to lives, livelihoods, and the proper functioning of societies. CIs are networks of inter- or independent manufactured systems and processes that produce and distribute a continuous flow of essential goods and services \cite{ellis1997report}. Five main types of CIs are electrical power systems, gas networks, water networks, transportation networks, and telecommunication systems. They have many common characteristics. For example, they are networks with many nodes and links, span extensively in geographical scale, and have developed capabilities for near real-time monitoring \cite{guikema2009natural}.
+
+The central theme of this thesis revolves around electrical power systems, in particular, novel methods for their protection. Electricity is needed in almost every aspect of modern society. It is particularly critical as other CIs are increasingly reliant on it as an input. Traditional power systems consist of three functional parts: generation, transmission, and distribution. The first part generates electrical power to meet the overall demand. Power is then delivered through loss-minimizing transmission lines to downstream areas. Finally, end consumers such as residential and office buildings receive usable power supply via distribution systems.
+
+% Complex power systems
+To ensure a continuous supply of high-quality electricity, power system operators work around the clock to keep the system running smoothly. However, this is not an easy feat. Power systems are highly complex because of the extensive geographical scale, fast dynamics, and high operational standards. A real-world power system typically spans across multiple states in the United States or cities and countries in Europe’s case. Within such a system, a plethora of dynamics are always in play. Thousands of power generators, transformers, electric lines, and other components could be interacting with each other at any moment. Three major power grids of the United States consist of 275,000 kilometers of high-voltage transmission lines and over nine million kilometers of low-voltage distribution lines; in Europe, four major grids are comprised of four million transformers and ten million kilometers of distribution lines. At the same time, the integration of distributed energy resources, smaller power sources such as batteries and renewable energy sources, introduces increasing volatility to modern power systems~\cite{amin2008challenges}.
+
+% Motivation for line outage detection and identification research
+\section{Motivation}
+
+% Broad overview of the power system, the task of operators and the challenges
+
+Ensuring a reliable electricity supply is a challenging task.  Fast and accurate abnormal event detection and identification (D\&I) is necessary to contain system failures in time and minimize the impact of such events. Abnormal events in power systems create disturbances that are different from a normal operating condition. Depending on the cause and duration, such disruptions may or may not lead to acute or cascading failures. Given the complexity of the system, there are many types of disturbances that could happen \cite{seymour2005seven}. Among them, power transmission line outage receives a significant amount of attention from both the research community and the industry. Power line outages can frequently occur due to adverse weather conditions, component wear and tear, vandalism, or other reasons. The increased research activities in power line outage D\&I can be attributed to two reasons. One is the urgent need to improve system operators’ real-time situational awareness. On the other hand, the emergence of phasor measurement unit (PMU) technology makes numerous real-time monitoring and control applications possible.
+
+\subsection{Real-time Situational Awareness}
+
+% Real-time situational awareness
+Real-time situational awareness about the system, e.g., changes in operating conditions and external system contingencies, enables system operators to identify and respond to abnormal events promptly~\cite{kezunovic2013role}. From a contingency point of view, delayed information regarding system faults might allow localized faults to cascade into large-scale blackouts~\cite{Aminifar2014}. For example, one of the common contributing factors of the 2003 Northeast and 2011 Southwest blackout was that the operators were not alerted in time about external outage contingencies, e.g., a critical transmission line tripping~\cite{Johnson2000}. One of the challenges about real-time monitoring is that line outage dynamics can manifest in a time scale of milliseconds~\cite{Milano2010power}. The traditional supervisory control and data acquisition (SCADA) system cannot capture these dynamics since it reports at a rate of one measurement every several seconds~\cite{pignati2015real}.
+
+
+\subsection{Emergence of Phasor Technology}
+% What PMUs are
+Synchrophasors are time-synchronized numbers representing both the magnitude and phase angle of the sine waves found in electricity, e.g., voltage phasor or current phasor. PMUs are devices capable of recording such synchrophasor samples when installed across the power grid with high precision, high fidelity, and GPS time stamps \cite{Aminifar2014}. An industry-grade PMU can measure voltage phasors on the bus with a total vector error of less than 1\% and report 30 to 60 samples per second. The rising prevalence of PMUs makes numerous real-time monitoring, protection, and control applications possible since they can measure system states at a much higher frequency than traditional SCADA systems. As a result, many consider PMU technology as the key to grid modernization. This is also in line with the smart grid vision that calls for better observability, controllability, and operational flexibility \cite{Panteli2015}. 
+
+Consequently, there is a large body of research works on PMU and their application in power systems. PMU technologies are actively studied for power oscillation monitoring, abnormal event detection, and dynamic state and parameter estimation. According to the excellent review paper \cite{Aminifar2014}, in their nine categories of PMU-related power system research, there are about 500 papers published in Institute of Electrical and Electronics Engineers (IEEE) and Institution of Engineering and Technology (IET) journals over the 30 years before 2014. The number is seen growing at an exponential rate recently. Readers can refer to \cite{Aminifar2014} for a comprehensive review of PMU applications in power systems.
+
+% \autoref{intro:fig:vege} 
+
+\section{Challenges}
+However, several challenges need to be addressed before realizing the full potential of PMU technology for line outage D\&I. 
+% 1. Real-time computational challenge
+One is the real-time computational challenge. As mentioned, outage D\&I is most wanted for enhancing operators’ real-time awareness. Consequently, a common goal for any D\&I scheme is to keep computational cost low enough for real-time processing and extracted information useful enough for analytics.
+% scalability of the scheme for realistically-sized system
+In particular, PMU’s high sampling rate means that data processing has to be fast. Furthermore, a realistic power system usually contains hundreds of lines and substations. Therefore, the proposed D\&I scheme must be efficient to handle real-time processing of fast streaming data and scalable to large dimensions.
+
+% potentially huge solution space for identification
+Also, a specific challenge for outage line identification is the inherent combinatorial nature of potential outage locations. An outage can happen at one or multiple transmission lines; the total number is in general not known a priori. For example, for a system with $L$ transmission lines, the solution space for identification consists of $2^L$ location combinations. An exhaustive search is only possible for small systems. The proposed scheme has to overcome this challenge for any realistic power system implementation.
+
+
+% 2. Limited sensor deployment challenge 
+Another challenge for line outage D\&I is that sensor deployment is limited in number. 
+% must consider limited sensor due to budget and system coupling
+PMU is the foundation for many D\&I schemes. However, PMUs are only progressively adopted by energy companies. Installing PMUs also means the whole data communication, processing, and storage infrastructure behind the technology, which is expensive. Separately, there have been many research works suggesting a full PMU deployment is not needed for many applications~\cite{aminifar2014synchrophasor}. Therefore, when designing a D\&I scheme, one must consider a limited PMU deployment in the system, i.e., some parts are not observable.
+
+% detection need to be robust to sensor locations
+Therefore, a limited PMU deployment, in terms of the number and location, impacts the outage detection scheme’s effectiveness. In particular, line outages that happen far away from buses with PMUs would register mild signals in the data, leading to a longer detection delay or missed detection~\cite{yang2020control}. It remains a challenge to design a detection scheme robust to the location of the PMUs and outages. 
+
+% identification need to overcome ambiguity due to limited sensor
+On the other hand, a limited coverage also leads to increased identification difficulty. Pre- and post-outage states at different parts of the system are needed to discriminate outages of one location from another. Having unobserved buses might lead to the signatures of some outages being missed out. This loss of information might lead to some outages of different locations being indistinguishable from one another~\cite{Wu2015,Costilla-Enriquez2019,yang2021dynamic}. Hence, an effective outage identification scheme must overcome the ambiguity issue caused by a limited PMU deployment.
+
+
+\section{Thesis Organization}
+% Organization
+This thesis is devoted to developing novel power system line outage D\&I methods by addressing existing challenges and research gaps. In particular, the rest of this thesis is organized as follows.
+
+Chapter \ref{ch:literature} surveys the state of the art in the domain of sensor data-driven real-time power system line outage detection and identification. Existing research works are reviewed and gaps are identified in two directions: outage detection, that concerns with the problem of detecting an outage as fast as possible, and outage identification, that concerns with the problem of accurately locating the actual tripped line(s). 
+
+Chapter \ref{ch:ps_background} gives background information on how power systems as complex networks could be modeled and simulated. This information will be repeatedly referenced in the rest of this thesis. Specifically, the section introduces the AC power flow model that describes system algebraic states and relevant power system physical quantities. Then, the dynamic simulation procedure of power systems and the open-source software package used to do it are introduced. These describe how line outage data are simulated and obtained using standard IEEE test power systems.
+
+
+% First work
+% Our approach and contribution
+Chapter \ref{ch:detection_using_approximate_dynamics} describes a novel real-time dynamic outage detection scheme based on the AC power flow model and statistical change detection theory, using voltage phase angle data collected from a limited number of PMUs. The proposed method can capture system dynamics since it retains the time-variant and nonlinear nature of the power system. The method is computationally efficient and scales to large and realistic networks. Extensive simulation studies on IEEE 39-bus and 2383-bus systems demonstrated the effectiveness of the proposed method.
+
+% Second work
+In Chapter \ref{ch:detection_using_generator_dynamics}, a unified detection framework that utilizes both generator dynamic states and nodal voltage information is proposed. The inclusion of generator dynamics makes detection faster and more robust to a priori unknown outage locations. The superior performance is demonstrated using the IEEE 39-bus test system. In particular, the scheme achieves an over 80\% detection rate for 80\% of the lines, and most outages are detected within 0.2 seconds. 
+% Immediate and wider implication
+The new approach could be implemented to improve system operators' real-time situational awareness by detecting outages faster and providing a breakdown of outage signals for diagnostic purposes.
+
+% Third work 
+% Overall contributions
+% Our approach
+Chapter \ref{ch:identification} describes a new framework of multiple-line outage identification using partial nodal voltage measurements. Using the AC power flow model, voltage phase angle signatures of outages are extracted and used to group lines into minimal diagnosable clusters. Identification is then formulated into an underdetermined sparse regression problem solved by lasso. Tested on IEEE 39-bus system with 25\% and 50\% PMU coverage, the proposed identification method is 93\% and 80\% accurate for single- and double-line outages. 
+% Why does it matter? Immediate and wider implication
+This study suggests that the AC power flow is better at capturing outage patterns, and sacrificing a moderate amount of precision could yield substantial improvement in identification accuracy. These findings could contribute to developing future control schemes that help power systems resist and recover from outage disruptions in real-time.
+
+
+Chapter \ref{ch:conclusion} concludes this thesis and discusses future research directions.

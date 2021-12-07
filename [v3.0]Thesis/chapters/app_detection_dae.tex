@@ -1,0 +1,83 @@
+\SetPicSubDir{4_detection_dae}
+
+
+\chapter{Additional Simulation Results} % (fold)
+\label{ch4:sec:appendix}
+
+Additional state estimation and outage detection results from the method proposed in Chapter \ref{ch:detection_using_generator_dynamics} are reported here.
+
+\section{Additional Generator State Estimation Results}
+\label{ch4:sec:appendix:state_estimation}
+
+An example of line 18 outage is illustrated in Section \ref{ch4:sec:results:example} with generator state estimation using the particle filter. The complete list of state estimation results for all the other monitored generator buses, i.e., Bus 34, 35, 36, and 37, are shown in Fig. \ref{ch4:fig:line_18_state_estimation_eg_34} to Fig. \ref{ch4:fig:line_18_state_estimation_eg_37}.
+
+\begin{figure}[!thpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_18_state_estimation_eg_34}}
+\caption{\textit{State estimation result of the particle filter on $\delta$ and $\omega$ of Bus 34.}}
+\label{ch4:fig:line_18_state_estimation_eg_34}
+\end{figure}
+\begin{figure}[!thpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_18_state_estimation_eg_35}}
+\caption{\textit{State estimation result of the particle filter on $\delta$ and $\omega$ of Bus 35.}}
+\label{ch4:fig:line_18_state_estimation_eg_35}
+\end{figure}
+\begin{figure}[!thpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_18_state_estimation_eg_36}}
+\caption{\textit{State estimation result of the particle filter on $\delta$ and $\omega$ of Bus 36.}}
+\label{ch4:fig:line_18_state_estimation_eg_36}
+\end{figure}
+\begin{figure}[!thpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_18_state_estimation_eg_37}}
+\caption{\textit{State estimation result of the particle filter on $\delta$ and $\omega$ of Bus 37.}}
+\label{ch4:fig:line_18_state_estimation_eg_37}
+\end{figure}
+
+
+\section{Additional Outage Detection Results}
+\label{ch4:sec:appendix:detection}
+Additional line outage detection results are shown here. Fig. \ref{ch4:fig:line_0_detection_signal_breakdown} and Fig. \ref{ch4:fig:line_0_monitor_statistics} show the output signal breakdown and monitoring statistic progression under the outage-free scenario, i.e., zero line outage is simulated. Fig. \ref{ch4:fig:line_6_detection_signal_breakdown} and Fig. \ref{ch4:fig:line_6_monitor_statistics} show the output signal breakdown and monitoring statistic progression for line 6 outage. The outage impact on the power grid is mild and short-lived, triggering insignificant increase in the monitoring statistic. Fig. \ref{ch4:fig:line_34_detection_signal_breakdown} and Fig. \ref{ch4:fig:line_34_monitor_statistics} show the output signal breakdown and monitoring statistic progression for line 34 outage. The observed impact of this outage is significant and triggers a large and sustained increase in the monitoring statistic. 
+\begin{figure}[!h]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{detection_signal_breakdown_line_0}}
+\caption{\textit{Output signals of the detection scheme under outage-free condition and the breakdown by components.}}
+\label{ch4:fig:line_0_detection_signal_breakdown}
+\end{figure}
+\begin{figure}[!h]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_0_monitor_statistics}}
+\caption{\textit{Progression of MEWMA monitoring statistic for the outage-free scenario.}}
+\label{ch4:fig:line_0_monitor_statistics}
+\end{figure}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{detection_signal_breakdown_line_6}}
+\caption{\textit{Output signals of the detection scheme for line 6 outage and the breakdown by components.}}
+\label{ch4:fig:line_6_detection_signal_breakdown}
+\end{figure}
+\begin{figure}[!h]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_6_monitor_statistics}}
+\caption{\textit{Progression of MEWMA monitoring statistic for detecting line 6 outage.}}
+\label{ch4:fig:line_6_monitor_statistics}
+\end{figure}
+
+
+
+\begin{figure}[!h]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{detection_signal_breakdown_line_34}}
+\caption{\textit{Output signals of the detection scheme for line 34 outage and the breakdown by components.}}
+\label{ch4:fig:line_34_detection_signal_breakdown}
+\end{figure}
+\begin{figure}[!h]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{line_34_monitor_statistics}}
+\caption{\textit{Progression of MEWMA monitoring statistic for detecting line 34 outage.}}
+\label{ch4:fig:line_34_monitor_statistics}
+\end{figure}
+

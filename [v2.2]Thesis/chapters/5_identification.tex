@@ -1,0 +1,481 @@
+\SetPicSubDir{5_identification}
+\SetExpSubDir{5_identification}
+
+\chapter{Multiple-line Outage Identification via Sparse Regression}
+\label{ch:identification}
+\vspace{2em}
+
+\section{Introduction} % (fold)
+\label{ch5:sec:introduction}
+
+% Motivation
+Rapid disruption detection and accurate localization are needed to facilitate the recovery of power systems following a disruption, e.g., line outage. The previous two chapters detail two frameworks of detecting line outages as fast as possible. In this chapter, the problem of identifying true outage lines after a detection alarm has been raised is investigated.
+
+%Challenges
+There are two main challenges to accurate outage identification. The first is limited observability. One must consider a limited PMU deployment in the system when designing an outage identification scheme \cite{aminifar2014synchrophasor}. The proposed scheme, therefore, has to maximize its performance under the constraint of limited observability. The second challenge is the identification scheme's scalability, giving the inherent combinatorial nature of potential outage locations. For example, the search space consists of $2^L$ outage location combinations for a system with $L$ transmission lines.
+
+This chapter describes a new framework of multiple-line outage identification based on power system sensitivity analysis and sparse regression methods considering line diagnosabilities. A signature map of line outages based on AC power flow sensitivity analysis is built in advance using readily available system topology and parameter information. The outage identification problem is then formulated into an underdetermined sparse regression problem that accommodates any a priori unknown number of simultaneous line outages. Crucially, clusters of lines whose outages are indistinguishable under a given PMU placement are identified and augmented with the initial result to improve identification accuracy.
+
+The contributions of this chapter's research work can be summarized in three aspects: (1) This work improves the state-of-the-art multiple-line outage identification performance under limited PMU deployment; (2) The novel sparse regression formulation accommodates an unknown number of outage lines and is robust with noisy data; (3) A new way to account for indistinguishable outages is proposed using minimal diagnosable clusters, significantly improving overall identification accuracy.
+
+The rest of this chapter is organized as follows. The basis for outage identification is the post-outage voltage angle signature and is derived in Section \ref{ch5:sec:angle_signature}. A multiple-line outage identification scheme is then described in Section \ref{ch5:sec:identification_scheme}. Section \ref{ch5:sec:simulation} demonstrates the effectiveness of the proposed scheme compared to existing ones. The conclusion and future research directions are summarized in Section \ref{ch5:sec:conclusion}. 
+
+% section introduction (end)
+
+\section{Phase Angle Signature of Outages}
+\label{ch5:sec:angle_signature}
+
+Each outage is different. Machine learning-based approaches let algorithms learn the difference through clever training and generalizable data. Physics-informed approaches, e.g., the proposed method, leverage physical laws governing power systems to find out the difference instead. In general, two questions need to be answered to build an effective physics-informed outage identification scheme: (1) How to quantify the impact of each line outage on nodal bus state variables? (2) Given the characterization, how to identify the most probable outage lines out of all possible ones? This section addresses the first question through sensitive analysis of the AC power flow model. In the next section, an efficient and robust identification scheme is developed. 
+
+\subsection{Power Flow Model}
+% AC power flow model
+Consider a power system with $N$ buses and $L$ transmission lines where $\mathcal{N} = \{1, 2, \dots, N\}$ and $\mathcal{L} = \{1, 2, \dots, L\}$. The AC power flow model of (\ref{ch2:eqn:AC_power_flow_model}) is the governing equation between active and reactive power injection (P, Q) and voltage phasor (V$\angle\theta$) at each bus. $\text{V}_m$ and $\theta_m$ are assumed to be observable if bus $m$ has a PMU. Let \textbf{P}, $\boldsymbol{\theta}$, and \textbf{V} represent the vectors of active power injections, voltage angles, and magnitudes at all buses\footnote{By convention, bus 1 is assumed to be the reference bus whose voltage phase angle is set to $0^\circ$ and magnitude to $1.0$ per unit (p.u.).}. 
+A sensitivity analysis on power injections by linearization of the active power flow equation (\ref{ch2:eqn:AC_power_flow_P}) around a pre-outage steady-state operating point yields the following partial differential equation: 
+\begin{equation}
+\label{ch5:eqn:ac_decoupled_jacobian}
+\Delta \textbf{P} \approx J_1 \Delta\boldsymbol{\theta} + J_2 \Delta\textbf{V}\,,
+\end{equation}
+where ${J}_1, {J}_2$ are two submatrices of the AC power flow Jacobian with 
+\begin{equation}
+\label{ch5:eqn:ac_jacobian}
+{J}_1 = \frac{\partial \textbf{P}}{\partial \boldsymbol{\theta}} \,, 
+{J}_2 = \frac{\partial \textbf{P}}{\partial \textbf{V}} \,.
+\end{equation}
+Let 
+$$
+\Delta \textbf{P} = \textbf{P}' - \textbf{P} \,,
+$$ where $\textbf{P}$ and $\textbf{P}'$ denote pre- and post-outage bus power injections and similarly define
+$$
+\Delta\boldsymbol{\theta} = \boldsymbol{\theta}' - \boldsymbol{\theta} \,.
+$$
+In the usual operating range of relatively small angles, power systems exhibit much stronger interdependence between \textbf{P} and $\boldsymbol{\theta}$ as compared to \textbf{P} and \textbf{V} \cite{murty2017power}. Therefore, it is sufficient to focus on the relationship between real power injection and voltage phase angle, i.e., ${J}_1$, in the remainder of this chapter\footnote{The same set of analysis can applied to reactive power and voltage magnitude as well, which is omitted here. Some details about power system linearization are also skipped as the formulation is standard. Interested reader can refer to Section II of \cite{yang2020control}.}. Redefining ${J}_1$ as ${J}$, the off-diagonal and diagonal elements of ${J}$ can be derived from (\ref{ch2:eqn:AC_power_flow_P}) and are detailed in (\ref{ch3:eqn:elements_J}). Therefore, an AC power flow-based relationship is established between instantaneous real power injection changes and voltage phase angle changes as 
+$$
+\Delta\textbf{P} = {J} \Delta\boldsymbol{\theta} \,.
+$$
+Inverting the Jacobian matrix, the relationship can be written as:
+\begin{equation}
+\label{ch5:eqn:angle_sensitivity}
+\Delta\boldsymbol{\theta}  = {J}^{-1} \Delta\textbf{P} \,.
+\end{equation}
+Therefore, given a unit change of real power injections, ${J}^{-1}$ in (\ref{ch5:eqn:angle_sensitivity}) quantifies the associated impact on system-wide bus voltage angles. 
+
+% Outage model
+\subsection{Outage Signature Map}
+\label{ch5:sec:outage_signature_map}
+We can breakdown the $\Delta\textbf{P}$ term in (\ref{ch5:eqn:angle_sensitivity}) in order to establish a ``dictionary'' of phase angle changes specific to each line outage. Under the DC assumptions specified in Section \ref{ch3:sec:power_model} of Chapter 3, a neat way to characterize the impact of an outage at line $l$ carrying power $\tilde{p}_l$ from bus $i$ to $j$ is a real power injection of $p_{l}$ at bus $i$ and withdrawal of $-p_{l}$ at bus $j$ \cite{wood2013power}. The constant $p_l$ can be determined by
+$$
+p_l = \frac{-\tilde{p}_l}{1+PTDF_{l, i, j}} \,,
+$$ where $PTDF_{l, i, j}$ is the so-called power transfer distribution factor that depends on the pre-outage power flow on line $l$, the sending bus location $i$, and the receiving bus location $j$ \cite{liu2004role}. The factor is a sensitivity measure of how a change in a line’s status affects the flows on other lines in the system. Equivalently, the change in real power injection due to an outage at line $l$ can be written as:
+$$
+\Delta \textbf{P} = p_{l} \cdot \mathbf{a}_l \,,
+$$ 
+where $\mathbf{a}_l$ is an $N$-vector of zeros except with $1$ at the $i_{th}$ and $-1$ at the $j_{th}$ position. In general, the expected change in phase angles due to all outages at line $l, l \in \mathcal{L}$ can be obtained. Let 
+$$
+\boldsymbol{p} = [p_1, p_2, \dots, p_L]^{\top}
+$$
+denote the vector of power transfers of all transmission lines. Then by putting the $p_{l}$ and $m_l$ for all transmission lines together, an angle signature map of all line outages can be written in matrix form:
+\begin{align}
+\label{ch5:eqn:complete_map}
+    [\Delta\boldsymbol{\theta}] 
+    &= {J}^{-1} 
+    \begin{bmatrix} p_{1} \mathbf{a}_{1} & p_{2} \mathbf{a}_{2} & \cdots & p_{L} \mathbf{a}_{L}\\ 
+    \end{bmatrix} \nonumber\\ 
+    &= {J}^{-1} 
+    \begin{bmatrix} \mathbf{a}_{1} & \mathbf{a}_{2} & \cdots & \mathbf{a}_{L} \\
+    \end{bmatrix} \operatorname{ diag}(\boldsymbol{p}) \nonumber\\
+    &= {J}^{-1} A \operatorname{ diag}(\boldsymbol{p}) \,, 
+\end{align}
+where $A$ is the $N \times L$ bus to branch incidence matrix defined in Section \ref{ch2:sec:ps_model} with columns corresponding to lines and rows to buses. $\operatorname{diag}(\boldsymbol{p})$ is the diagonal matrix with individual line power transfer $p_l$ on the diagonal.
+
+In a realistic setting of limited PMU deployment, it is assumed that there are fewer PMUs than buses and transmission lines, i.e. $K \le N$ and $K \le L$. Define a bus selection matrix $S\in\{0,1\}^{K\times N}$ that selects rows of buses with PMUs, the observable phase angle impact from all line outages is
+\begin{align}
+\label{ch5:eqn:observable_impact}
+[\Delta\boldsymbol{\theta}]_I &= S J^{-1} A \operatorname{diag}(\boldsymbol{p}) \nonumber\\
+& = F \operatorname{diag}(\boldsymbol{p}) \,,
+\end{align}
+where $F$ is defined by
+\begin{equation}
+\label{ch5:eqn:feature_map}
+    F = S J^{-1} A \,.
+\end{equation}
+Therefore, $F$ is a $K \times L$ outage signature map determined by PMU locations, system operating states, and topology. Each column of $F$, i.e., $F_{l}, \ell \in \mathcal{L}$ represents the incremental effect of line $l$ outage on all bus voltage angles captured by PMUs. 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{feature_map}}
+\caption{\textit{An example of the $19 \times 46$ signature map constructed using a random placement of 19 PMUs in the New England 39-bus system with 46 transmission lines. Each column corresponds to a single line outage and its incremental impact on PMU-equipped bus voltage phase angles.}}
+\label{ch5:fig:feature_map}
+\end{figure}
+Fig. \ref{ch5:fig:feature_map} shows an example of $F$ for 19 PMUs randomly placed on the New England 39-bus system, using $J^{-1}$ obtained from steady-state bus voltages. The signature map captures the varying degree of impact each line outage has on PMU-equipped buses. Outages of some lines might not be uniquely identified because they create similar phase angle responses, e.g., line 10 and 11, line 32 and 33. The map also suggests that some line outages create a minimal impact that might be indistinguishable from normal conditions, e.g., line 37 or line 41. While distinctive signatures from the map should help identify outage lines, indistinguishable line outages must be addressed to exploit the signature map information fully.
+
+\section{Outage Identification Scheme}
+\label{ch5:sec:identification_scheme}
+After a single- or multiple-line outage, the signature map developed in the previous section provides a basis for accurate outage identification. The outage event is assumed to be detected quickly using a detection scheme, e.g., of \cite{yang2020control} or \cite{yang2021particle}. The multiple-line outage identification problem is first formulated as a sparse regression problem. Then, a method to address indistinguishable outages is proposed to further improve the outage line identification accuracy. 
+
+\subsection{Identification by Sparse Regression}
+\label{ch5:sec:sparse_regression}
+% Identification as sparse regression
+Suppose an outage of $s$ line happen at $\{l_i, i=1, \dots, s, i \in \mathcal{L}\}$ and the size is relatively small, i.e., $s \ll L$. Let $\boldsymbol{\beta}$ be an $L$-vector with all zeros except at $\boldsymbol{\beta}_{l_i}$ with value $p_{l_i}$ for $i = 1, \dots, s$.
+If the outage model in Section \ref{ch5:sec:angle_signature} holds, then
+\begin{align}
+    \Delta\boldsymbol{\theta} &= S J^{-1} (\mathbf{a}_{l_1} p_{l_1} + \dots + \mathbf{a}_{l_s} p_{l_s}) + \boldsymbol{\epsilon} \nonumber\\
+    &= S J^{-1} A \boldsymbol{\beta} + \boldsymbol{\epsilon} \nonumber\\
+    &= F \boldsymbol{\beta} + \boldsymbol{\epsilon}  \,,
+\end{align}
+where $\boldsymbol{\epsilon}$ is a Gaussian noise term with mean zero and known variance $\sigma^2 \textbf{I}_{K\times K}$, representing the measurement error of $K$ PMUs. Hence, non-zero entries, or support, of the power transfer vector $\boldsymbol{\beta}$ reveal true outage locations. Given the signature map $F$ and PMU measurements $\Delta\boldsymbol{\theta}$, $\boldsymbol{\beta}$ can be estimated from the above relationship by minimizing the squared-error loss, subject to the outage size constraint as
+\begin{align}
+\label{ch5:eqn:l_0_formulation}
+\underset{\boldsymbol{\beta} \in \mathbb{R}^{L}}{\min} &\left\|\Delta\boldsymbol{\theta} - F\boldsymbol{\beta}\right\|_{2}^{2} \,, \\
+& \text { s.t. }\|\boldsymbol{\beta}\|_{0} = s \nonumber\,,
+\end{align}
+where $\left\|\cdot\right\|^2_2$ is the square of the $\ell_2$ norm and $\left\|\cdot\right\|_0$ is the number of non-zero entries of a vector. However, as the location of the non-zero entries are not known a priori, the above formulation presents a challenging combinatorial optimization problem. Methods such as exhaustive search, forward-stepwise regression or mix integer optimization could be used to solve the problem \cite{bertsimas2020sparse}. However, compared to shrinkage method, in particular, lasso, they are computationally more intensive, thus not suitable for real-time application in realistic power systems \cite{hastie2020best}. 
+
+Lasso was originally proposed in \cite{tibshirani1996regression} and has since been used in various applications for ease of implementation, robustness to noise, and the ability to shrink some coefficients to exactly zero, thus recovering true support of the vector. Lasso solves a relaxed version of the problem in (\ref{ch5:eqn:l_0_formulation}) by replacing the $\ell_0$ constraint with an $\ell_1$ constraint:
+\begin{align}
+\label{ch5:eqn:l_1_formulation}
+\underset{\boldsymbol{\beta}  \in \mathbb{R}^{L} }{\min} &\left\|\Delta\boldsymbol{\theta} - F\boldsymbol{\beta}\right\|_{2}^{2} \,, \\
+& \text { s.t. }\|\boldsymbol{\beta}\|_{1} \le s \nonumber\,,
+\end{align}
+and equivalently in Lagrangian form:
+\begin{equation}
+\label{ch5:eqn:lasso_formulation}
+\min_{\boldsymbol{\beta} \in \mathbb{R}^{L}}\left\{\|\Delta\boldsymbol{\theta} - F\boldsymbol{\beta}\|_{2}^{2}+\lambda\|\boldsymbol{\beta}\|_{1}\right\},
+\end{equation}
+where $\|\cdot\|$ is the $\ell_1$ norm and $\lambda$ is a regularization parameter that has a one-to-one correspondence to $s$ for solutions of (\ref{ch5:eqn:l_1_formulation}) and (\ref{ch5:eqn:lasso_formulation}). Larger values of $\lambda$ impose stronger regularization on $\boldsymbol{\beta}$, whereas if $\lambda = 0$, the lasso solution $\boldsymbol{\hat{\beta}}$ is the same as the least squares estimate. According to \cite{zou2007degrees}, given a fixed $F$, there exists a finite sequence,
+\begin{equation}
+\label{ch5:eqn:transition_points}
+\lambda_0 > \lambda_1 > \cdots > \lambda_Q = 0 \,,
+\end{equation}
+such that (1) for all $\lambda > \lambda_0$, $\boldsymbol{\hat{\beta}} = \mathbf{0}$, (2) the support of $\boldsymbol{\hat{\beta}}$ does not change with $\lambda$ for $\lambda_q < \lambda < \lambda_{q+1}\,, q=0, \dots, Q-1$. These $\lambda_q$'s are called transition points as the support in lasso solution changes at each $\lambda_q$. Often, $\lambda$ is selected according to some parameter tuning scheme, e.g. cross validation, such that the resultant regression model achieves best prediction accuracy. However, the objective of this research work is to uncover the true support of $\boldsymbol{\beta}$, which might change for each instance of outage. Thus, lasso solutions at various transition points need to be obtained each time an outage is detected to ascertain the location, and in effect the number, of outage lines. 
+
+Least angle regression (LARS), originally proposed by \cite{efron2004least}, with lasso modification is an efficient algorithm that computes the entire lasso path with a complexity of least squares regression. Briefly, starting with coefficients of zero, LARS identifies the first variable as the one most correlated with the response, e.g., $\Delta\boldsymbol{\theta}$. As the coefficients of the active variables move toward their least squares estimates, a new variable becomes active when its correlation with the residual ``catches up'' with the active set. These changes happen at the transitions points of (\ref{ch5:eqn:transition_points}) and variables enter one at a time \cite{efron2004least}. The process is stopped after $Q$ steps and in general $Q = \min\{K-1, L\}$ for standardized data unless otherwise specified. 
+
+Assuming $\Delta\boldsymbol{\theta}$, its mean $\Delta\bar{\boldsymbol{\theta}}$, signature map $F$, and the maximum number of non-zero entries $Q$ are provided, LARS can produce a sequence of regularization parameters $\lambda^q$ and the associated lasso solution $\boldsymbol{\beta}^q$ to (\ref{ch5:eqn:lasso_formulation}) as described in Algorithm \ref{alg:lars}. Indices of significantly non-zero entries of $\boldsymbol{\beta}^Q$ are then identified as potential outage locations. 
+% LARS algorithm
+\begin{algorithm}
+\caption{Least Angle Regression with Lasso Modification}
+\label{alg:lars}
+Input: $\Delta\boldsymbol{\theta}, \Delta\boldsymbol{\bar{\theta}}, F, Q$\\
+Output: Lasso solution path $\{\lambda_q, \boldsymbol{\beta}^q\}_{q=0}^{Q}$
+\begin{algorithmic}[1]
+\State Standardize columns of $F$ to mean zero and unit $\ell_2$ norm. 
+Set $\boldsymbol{\beta}^0 = (\beta_1, \beta_2, \dots, \beta_L) = \mathbf{0}$. Let $r_0 = \Delta\boldsymbol{\theta} - \Delta\boldsymbol{\bar{\theta}}$. 
+
+\State Get first active column: 
+$$
+j = \arg\underset{i \in \mathcal{L}}\max|\langle r_0, F_i\rangle | \,.
+$$
+Let $\lambda_0 = |\langle r_0, F_j\rangle |$. Define $\mathcal{A} = \{j\}$ and $F_{\mathcal{A}}$ as the active set and signature matrix with columns from the set. 
+
+\For{$q = 1, 2, \dots, Q$}
+\State Get current least-squares direction: 
+$
+\delta = \frac{1}{\lambda_{q - 1}}(F_{\mathcal{A}}^{\top}F_{\mathcal{A}})^{-1}F_{\mathcal{A}}^{\top}r_{q-1} \,.
+$ 
+Define $L$-vector $\mathbf{u}$ such that $\mathbf{u}_{\mathcal{A}} = \delta$ and zero everywhere else.
+
+\State  Move coefficients toward least-squares estimate: $\boldsymbol{\beta}(\lambda) = \boldsymbol{\beta}^{q-1} + (\lambda_{q-1} - \lambda) \mathbf{u}$, for $0 < \lambda \le \lambda_{q-1}$ while maintaining $r(\lambda) = \Delta\boldsymbol{\theta} - F \boldsymbol{\beta}(\lambda)$. Drop any element of $\mathcal{A}$ if the corresponding coefficient crosses 0 and recompute the least-squares estimate. 
+
+\State Identify the largest $\lambda$ at which $|\langle r(\lambda), F_l \rangle| = \lambda$ for $l \notin \mathcal{A}$. Let $\lambda_p = \lambda$, the new transition point.
+
+\State Suppose the new active column has index $j$. Update $\mathcal{A} = \mathcal{A} \cup j$, $\boldsymbol{\beta}^q = \boldsymbol{\beta}(\lambda_q) + (\lambda_{q-1} - \lambda_q)\mathbf{u}$, and $r_q = \Delta\boldsymbol{\theta} - F \boldsymbol{\beta}^q$.
+\EndFor
+
+\State Return the sequence $\{\lambda_q, \boldsymbol{\beta}^q \}_0^Q$.
+\end{algorithmic}
+\end{algorithm}
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{individual_illustration}}
+\caption{\textit{Lasso path via LARS illustration for double-line outage at line 17 and 25. Complete lasso regularization path is shown on the left and coefficient estimation after five candidates entered the model on the right.}}
+\label{ch5:fig:lasso_illustration}
+\end{figure}
+Fig. \ref{ch5:fig:lasso_illustration} shows an example of the lasso path computed using LARS for a double-line outage event. The final $\boldsymbol{\beta}$ has five non-zero coefficients after five transitions. The scheme correctly identifies line 17 and 25 as they have significantly non-zero estimated coefficients compared to the others. The third-highest coefficient corresponds to line 38 which is a neighbor of line 17 that likely produces similar outage response. It enters the model before line 17 does. However its coefficient is overtaken by that of line 17 as they increase towards the least squares solution, giving the correct final identification result. 
+
+
+
+% \begin{IEEEproof}[Remark 1 (Unknown Number Of Outage Lines)]
+% When the number of outages $a$ is not specified, model selection methods could be used to identify the appropriate number. 
+
+% This is a problem for all proposed multiple line outage identification methods.
+
+% Although simultaneous outages of more than three lines are considered very unlikely under normal circumstances. 
+% \end{IEEEproof}
+
+
+\subsection{Indistinguishable Line Outages}
+\label{ch5:sec:diagnosability}
+As seen from the signature map of Fig. \ref{ch5:fig:feature_map}, some outages  create highly similar responses from the system, i.e., 
+$$
+F_i \approx F_j
+$$ 
+for some $i,j \in \mathcal{L}$. In general, this ambiguity problem is commonly encountered in realistic systems \cite{Wu2015}. One reason is that some line outages do indeed create similar responses due to a combination of topological positions and pre-outage power flow carried. On the other hand, a limited PMU deployment might mean distinctive signatures of some outages are not observable. Intuitively, the second situation is more pronounced as the PMU budget decreases. It is also well-known that with a group of highly correlated predictors, the lasso formulation of (\ref{ch5:eqn:lasso_formulation}) tends to select one from the group and does not care which one to select \cite{zou2005regularization}. In the extreme case where $F_{i} = F_{j}$ for some $i,j \in \mathcal{L}$ and $\boldsymbol{\hat{\beta}}$ is the lasso solution, it can be shown that $\hat{\beta}_{i}\hat{\beta}_{j} \ge 0 $ and $\boldsymbol{\hat{\beta}}^*$ is another solution of (\ref{ch5:eqn:lasso_formulation}) where
+\begin{align}
+\hat{\beta}^*_k = 
+\begin{cases}
+\hat{\beta}_k \,,  k \ne i, k \ne j \\
+(\hat{\beta}^*_{i}+\hat{\beta}^*_{j}) r \,, k=i \\
+(\hat{\beta}^*_{i}+\hat{\beta}^*_{j}) (1-r) \,, k=j \,,
+\end{cases}
+\end{align}
+for some $r \in [0, 1]$ and $k \in \mathcal{L}$. Therefore, lasso might not have a unique solution when predictors are highly correlated.
+
+In the context of the identification problem under study, the true outage line, e.g., $i$, might not be correctly identified if $F_i \approx F_j$, and equivalently their correlation is close to 1, 
+\begin{align*}
+    \operatorname{corr}(p_i F_i, p_j F_j)   &= \operatorname{corr}(F_i, F_j) \\
+                                            &\approx 1 
+\end{align*}
+for some $i, j \in \mathcal{L}$. This work proposes to group transmission lines into minimal diagnosable clusters (MDCs) to address this ambiguity problem. Each MDC contains lines that, given a fixed PMU placement, produce responses that the proposed lasso formulation could not distinguish with a high probability. Concretely, an MDC is defined as a group of lines whose observable outage effects have pairwise correlations higher than a pre-defined threshold $\rho^*$. Therefore, the MDC of line $i$ is 
+\begin{equation}
+\label{ch5:eqn:mdc_threshold}
+g_i = \{i\} \cup \{j:\text{corr}(F_{i}, F_{j}) \ge \rho^*\} \,,
+\end{equation}
+for $j \in \mathcal{L}\setminus i$. The collection of MDCs for all transmission lines is
+\begin{equation}
+\label{ch5:eqn:mdc_collection}
+G_F = \{g_1, g_2, \dots, g_L\} \,.
+\end{equation}
+Fig. \ref{ch5:fig:correlation_heatmap} shows a heatmap of the correlation between each column of $F$ of the previously mentioned 19-PMU placement on 39-bus system. Only correlations higher than 0.9 are plotted. It can be seem that some groups of lines have close to correlation of 1, e.g., line 1 and 2, line 32, 33, and 34. 
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{correlation_heatmap}}
+\caption{\textit{Heatmap of pairwise correlation between columns of the signature map constructed from a random placement of 19 PMUs on the 39-bus system. Only correlations higher than 0.9 are plotted.}}
+\label{ch5:fig:correlation_heatmap}
+\end{figure}
+
+Also, the diagnosability of a system with given PMU locations can be characterized by the proportion of single-element MDCs,
+$$
+V(\rho^*) = \left(\sum_{i=1}^{L} \mathbf{1}(|g_i| = 1)\right)/L \,,
+$$
+where $\mathbf{1}(\cdot)$ is indicator function and $|g|$ counts the number of elements in the set $g$. Intuitively, a smaller $\rho^*$ corresponds to a more relaxed correlation requirement to enter the MDC, therefore in general decreases $V(\rho^*)$ and vice versa. With MDCs constructed offline, they can augment the lasso solution in real-time outage identification. Suppose $L_o = \{l_i^*, i=1, \dots, s\}$ are identified by lasso as outage lines. The augmented solution set would be 
+\begin{equation}
+\label{ch5:eqn:mdc_augmentation}
+L_o^* = \{g_{l_1^*}\cup g_{l_2^*} \cup \cdots \cup  g_{l_s^*}\} \,.
+\end{equation}
+With MDC augmentation, outage identification accuracy is improved, however, potentially at the expense of identification precision. The trade-off is influenced by both the correlation threshold $\rho^*$ and the diagnosability of the system. Note that if every MDC of the identified lines contain only a single element, i.e., the line itself, then $L_o^* = L_o$. The impact of the correlation threshold on identification accuracy-precision trade-off is investigated further in simulation study of Section \ref{ch5:sec:simulation}. 
+
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{identification_flow}}
+\caption{\textit{Framework of the proposed line outage identification scheme. Preparation steps one to three can be performed offline while outage identification steps four to six can be carried out during real-time monitoring operations.}}
+\label{ch5:fig:flow_chart}
+\end{figure}
+
+To end this section, Fig. \ref{ch5:fig:flow_chart} presents a summary of the proposed identification scheme. The scheme is split into an offline and online part. Preparation work of step one to three could be done offline since they only require quasi-steady-state information and baseline system parameters. Once the signature map and MDCs are constructed, they could be used in real-time monitoring operations as in step four to six.
+
+
+\section{Additional Remarks}
+
+\subsection{Comparison with Close Works} % Comparison with close works
+The idea of constructing expected angle change based on power injection to identify outage lines is not new \cite{Tate2008,Wu2015,Costilla-Enriquez2019}. Separately, authors in \cite{Zhu2012} and \cite{Chen2014} have also formulated outage identification as a sparse vector recovery problem. However, the proposed method is different in the following aspects: 1) All except \cite{Costilla-Enriquez2019} have relied on the simplified DC power flow model by assuming a flat voltage profile and approximately identical phase angles. The outage signature map is derived from the AC power flow model, reflecting the heterogeneous operating condition of power systems. 2) All except \cite{Wu2015} do not consider the impact of indistinguishable outage events on identification performance. Whereas Wu $\etal$ conduct an online search for indistinguishable outage locations, the proposed MDCs are constructed in advance and incur no extra computation during real-time identification. 3) Enriqurez $\etal$ use both voltage and current phasor for identification, while the proposed method only requires voltage measurements \cite{Costilla-Enriquez2019}. Performance of a sparse regression-based \cite{Zhu2012} and an AC power flow-based method \cite{Costilla-Enriquez2019} are compared in the simulation study.
+
+\subsection{Optimal PMU Placement} While outside the scope of this work, it has been observed that the locations of the PMUs influence the identification accuracy \cite{yang2020optimal}. Intuitively, the signature map constructed in Section \ref{ch5:sec:outage_signature_map} suggests that an optimal PMU placement should capture as much distinctive outage impact as possible in order to reduce ambiguities in identification. Pairwise correlation between columns of the design matrix of an underdetermined sparse regression problem is closely related to the study of signal reconstruction in compressive sensing. In particular, the condition on the design matrix that guarantees the recovery of the unknown coefficient vector is a function of the maximum of all pairwise absolute correlations \cite{bastani2016compressive}. This suggests that $F$ could be optimized in some way regarding its pairwise column correlations to improve the diagnosability of all line outages. Using a genetic algorithm, an optimal placement of 19 PMUs, i.e. 50\% coverage, is generated and the correlation heatmap of the corresponding signature map is shown in Section \ref{ch4:sec:optimal_placement} of the Appendix. Highly correlated pairs of outage lines are significantly reduced compared to the random placement. 
+
+\section{Simulation Study}
+\label{ch5:sec:simulation}
+
+
+\subsection{Simulation Setting}
+% Data generation
+The proposed identification scheme is tested on the IEEE 39-bus New England test system \cite{athay1979practical}. System transient responses following an outage are simulated using the open-source simulation package COSMIC \cite{Song2016}, in which a third-order machine model and AC power flow model are used. The sampling frequency of a PMU is assumed to be 30 samples per second. For each simulation run, system loads are varied by a random percentage between -5\% and 5\% from the base-line values. The total duration of a run is 10 seconds; the outage takes place at the 3rd second. Pre- and post-outage voltage phase angles are obtained at the 1st and 10th second. Artificial noise is added to all sampled angle data, $\Delta \boldsymbol{\theta}$, to account for system and measurement noise. They are drawn from a Gaussian distribution with mean $\mathbf{0}$ and standard deviation of $5\%$ of the pre-outage $\Delta\boldsymbol{\theta}$ on respective buses. 
+
+Simulated single-line outages include line 1 to 36 except line 21 as it creates two islands. Double-line outages include 100 random pairs of lines from line 1 to 46 that does not create separate islands. Given a list of identified and true outage lines, $L_o$ and $L_{true}$, identification performance is assessed by Accuracy (A), 
+\begin{equation}
+\label{ch5:eqn:accuracy}
+A(L_o, L_{true}, a):=\frac{\sum_i \mathbf{1}(\left| L_{o,i} \cap L_{true, i} \right| = a)}{\left| L_{true} \right|} \,.
+\end{equation}
+Therefore, the accuracy of single-line outage identification of a scheme is $A(L_o, L_{true}, 1)$. Similarly, the ``half-correct'' and ``all-correct'' accuracy of double-line outage is $A(L_o, L_{true}, 1)$ and $A(L_o, L_{true}, 2)$. Accuracy with MDC augmentation for each scenario is obtained by replacing $L_o$ with $L_o^*$, the augmented identification set defined in (\ref{ch5:eqn:mdc_augmentation}). 
+
+
+\subsection{Illustrative Outage Identification Example}  
+
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{observable_estimated}}
+\caption{\textit{Full, observed, and estimated outage impact on bus voltage phase angles after a double-line outage at line 17 and 25. 19 out of 39 buses are equipped with PMUs. The top figure shows observed noisy data with true and complete system states. The bottom figure compares the estimated phase angles changes from three methods against the observed states.}}
+\label{ch5:fig:estimation_comparison}
+\end{figure}
+Using the same example of a double-line outage at line 17 and 25, Fig. \ref{ch5:fig:estimation_comparison} demonstrates limited observability (top) and the estimation of $\Delta\boldsymbol{\theta}$ by each method (bottom). The angle change estimation is obtained using recovered power transfer coefficient $\boldsymbol{\hat{\beta}}$, i.e., $\Delta\boldsymbol{\hat{\theta}} = F \boldsymbol{\hat{\beta}}$. Limited deployment of PMUs means some bus angles are not observed. This is illustrated in the top figure where some signatures of the outage are missed. If unobserved locations contain all the distinctive signatures of that outage, distinguishing it from the others would be challenging. Therefore, characterizing and exploiting line diagnosabilities through MDCs are necessary to overcome this challenge. 
+
+The bottom figure shows a comparison of $\Delta\boldsymbol{\hat{\theta}}$ by three methods under comparison. Columns of $F$ corresponding to the outage lines identified by each method are used. The AC power flow-based methods are clearly better at reconstructing the angle changes than the DC one. Notice that the DC estimation has more ``flat'' angles than the other two, thus fewer details to distinguish it from other outages. While variable selection accuracy rather than estimation accuracy is the focus, this figure nevertheless demonstrates the superior performance of the AC power flow model at capturing a more nuanced outage impact.
+
+
+\subsection{Average Identification Performance}  
+The average performance of each identification scheme is reported based on 200 simulation runs over all the single- and double-line outages. Random noises and PMU placements of a 25\% or 50\% PMU coverage are used in each run. Two existing methods are compared, namely ``DC'' for the DC power flow-based method in \cite{Zhu2012} and ``Corr'' for the AC power flow-based method in \cite{Costilla-Enriquez2019}. Performance gain with MDC augmentation of (\ref{ch5:eqn:mdc_augmentation}) is also reported under the name ``...+MDC''.
+
+\subsubsection{Single-line Outage}  
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{single_outage_average}}
+\caption{\textit{Box-plots of single-line outage identification results for DC-based, correlation-based, and the proposed method. Results are based on 200 random simulation runs under 25\% (top) and 50\% (bottom) PMU coverage in the New England 39-bus system. Each method has two sets of results: accuracy of the original identification and of that augmented with MDCs.}}
+\label{ch5:fig:single_outage}
+\end{figure}
+Fig. \ref{ch5:fig:single_outage} shows the identification results for the single-line outage. With or without MDC augmentation, the correlation-based method and the proposed method consistently outperform the DC-based method in both cases of PMU coverage. The former two are roughly always 40\% more accurate than the DC-based method. The correlation-based method achieves an almost identical result with the proposed method regardless of MDC augmentation or PMU coverage. This is expected since the proposed method identifies the first variable as the one most correlated with the response, an identical procedure as the correlation-based method.
+
+When PMU coverage is increased from 25\% to 50\%, improvements in identification accuracy across all methods are observed as expected. Under 25\% coverage, the proposed method is 52\% and 86\% accurate (median), without and with MDC augmentation. With 50\% coverage, the performance is 72\% and 93\%. Lastly, augmenting original solutions with their MDCs improves accuracy across methods and PMU coverage. Roughly speaking, MDC augmentation improves accuracy by 30\% for the 25\% coverage and 20\% for the 50\% coverage. Notably, the two AC-based methods reach 93\% identification accuracy under 50\% coverage with MDCs. The decrease in accuracy improvement for better-observed system might be because they tend to have more distinguishable outages. The single-line outage identification results for 75\% PMU coverage of all methods is reported in Section \ref{sub:additional_identification_results} of the Appendix.
+
+\subsubsection{Double-line Outage} 
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{double_outage_average_19pmus}}
+\caption{\textit{Box-plots of double-line outage identification results for DC-based, correlation-based, and the proposed method. ``All correct'' (top) and ``half correct'' (bottom) results are based on 200 random simulation runs under 50\% PMU coverage in the New England 39-bus system. Each method has two sets of results: accuracy of the original identification and of that augmented with MDCs.}}
+\label{ch5:fig:double_outage_average_19pmus}
+\end{figure}
+Fig. \ref{ch5:fig:double_outage_average_19pmus} shows the identification results for the double-line outage under 50\% PMU coverage. The proposed method consistently outperforms the other two methods, especially in the ``all correct'' case. The DC-based method performs worst in both categories. The correlation-based method is not as accurate beyond the identification of the first line. The reason might be that the proposed formulation treats $\boldsymbol{p}'$ as an unknown vector. It is systematically estimated from data by lasso. However, the correlation-based method treats it as a fixed vector of line reactance. Inaccuracy in the model might then lead to inaccurate identification of multiple outage lines. Again, augmenting solutions with MDCs improve accuracy for all methods, especially in the ``all correct'' category. Overall, the proposed method with MDC augmentation (Lasso+MDC) achieves the best performance. It can identify 80\% of the simulated double-line outages under 50\% PMU coverage. The double-line outage identification results for all methods under 25\% and 75\% PMU coverage are reported in Section \ref{sub:additional_identification_results} of the Appendix. 
+
+
+\subsubsection{Effect of Minimal Diagnosable Cluster}  
+
+\begin{table}[!t]
+\caption{Impact of Minimal Diagnosable Cluster Threshold on Identification Precision-Accuracy Trade-off Using Lasso+MDC With 50\% PMU Coverage}
+\label{ch5:tab:impact_mdc_threshold}
+\centering
+\begin{tabular}{llll}
+\hline
+\hline
+Threshold ($\rho^*$)  & Single-element MDC\tablefootnote{One standard deviation appears in ().} (\%) & Single-line & Double-line \\
+\hline
+0.80 & 0.34 (0.06) & 0.94 (0.06) & 0.69 (0.08) \\
+0.84 & 0.42 (0.06) & 0.94 (0.05) & 0.69 (0.07) \\
+0.88 & 0.49 (0.07) & 0.95 (0.05) & 0.69 (0.08) \\
+0.93 & 0.55 (0.06) & 0.93 (0.06) & 0.67 (0.09) \\
+0.95 & 0.58 (0.06) & 0.93 (0.07) & 0.66 (0.09) \\
+0.98 & 0.62 (0.06) & 0.92 (0.06) & 0.66 (0.09) \\
+0.99 & 0.68 (0.07) & 0.89 (0.07) & 0.61 (0.09) \\
+\hline 
+\end{tabular}
+\end{table}
+Table \ref{ch5:tab:impact_mdc_threshold} shows the trade-off between identification precision and accuracy by varying the MDC threshold $\rho^*$ in (\ref{ch5:eqn:mdc_threshold}) with 50\% PMU coverage. As expected, the proportion of single-element MDC, $V(\rho^*)$, increases as the threshold approaches 1. In particular, a threshold of $\rho^* = 0.8$ leads to 34\% MDCs with a single element. That proportion increases to 68\% when $\rho^* = 0.99$. The good news is, a tighter requirement on MDC does not lead to much decrease in single- and double-line outage identification accuracy using the proposed method, from 94\% to 89\% and 69\% to 61\%, respectively. Similar results are observed under 25\% and 75\% PMU coverage, which are presented in Section \ref{sub:additional_identification_results} of the Appendix. 
+
+Therefore, augmenting solutions with MDCs could substantially improve identification accuracy while sacrificing identification precision moderately. The result also suggests that recognizing the most highly correlated line outages, e.g., setting $\rho^* \ge 0.95$, is enough to reap the benefit of MDC augmentation. Nevertheless, there is a trade-off between accuracy and precision. The threshold could be determined jointly with decision-makers' other considerations, e.g., resources available or criticality of the system. 
+
+\subsubsection{Effect of Measurement Noise} 
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{impact_noise_19pmus}}
+\caption{\textit{Impact of measurement noise on identification performance of the proposed method with 50\% PMU coverage. Performance using data with noise standard deviation varying from 0\% to 10\% of $|\Delta\boldsymbol{\theta}|$ is reported by median accuracy of single- and double-line outages using Lasso and Lasso+MDC. }}
+\label{ch5:fig:impact_noise_19pmus}
+\end{figure}
+The performance of the proposed method concerning measurement noise is also reported in Fig. \ref{ch5:fig:impact_noise_19pmus} under 50\% PMU coverage. The performance is largely robust to measurement noise. The accuracy for single-line identification shows no apparent difference as the noise level increases. There is a moderate decrease in accuracy for double-line outage identification as the noise level increases to 10\%. Lasso formulation is known to be robust to noise \cite{hastie2020best}. Results from the simulation study corroborate this. The impact of the measurement noise levels with 25\% and 75\% PMU coverage is reported in Section \ref{sub:additional_identification_results} of the Appendix.
+
+\section{Conclusion}
+\label{ch5:sec:conclusion}
+% What this paper proposes
+In this chapter, a novel framework of real-time multiple-line outage identification with limited PMU deployment is studied. AC power flow model is utilized to construct a signature map that encodes voltage phase angle signatures of each line outage. Identification is then formulated into an underdetermined sparse regression problem solved by lasso. Minimal diagnosable clusters are proposed to improve identification accuracy further. 
+% Does the proposed method achieve stated objectives
+Single-line and double-line outages simulated on the New England 39-bus system with 25\% and 50\% PMU deployment are used to study the proposed method's performance. The proposed method has better identification accuracy under all simulation settings, especially for double-line outages. The robustness of the method is also demonstrated using varying levels of noisy data. Finally, the merit of exploiting line diagnosability through minimal diagnosable clusters is also shown. The MDCs significantly improve identification accuracy by trading off a small amount of precision. 
+
+% What are the limitations and future research directions
+The problem of post-outage system parameter recovery is not considered in this work. In general, online updating of system parameters under partial observability remains a challenging but important task worth investigating. Also, the problem of optimal PMU placement can be pursued. As mentioned in the additional remark, the locations of the PMUs affect the network's diagnosability through pairwise correlations. In addition, the optimal PMU solution under one set of system operating states might be sub-optimal when the system states change. Optimal PMU placement for outage identification under different operating states remains a challenge worth investigating. 
+
+\newpage
+\section{Appendix} % (fold)
+\label{ch4:sec:appendix}
+
+\subsection{Genetic Algorithm-generated PMU Placement}
+\label{ch4:sec:optimal_placement}
+
+The pairwise correlation heatmap of the signature map based on the genetic algorithm-generated optimal PMU placement is shown in Fig. \ref{ch5:fig:best_correlation_heatmap}. It can be observed that the number of lines with high pairwise correlation has significantly reduced compared to that of a random PMU placement shown in Fig. \ref{ch5:fig:correlation_heatmap}.
+\begin{figure}[!h]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{best_correlation_heatmap}}
+\caption{\textit{Heatmap of pairwise correlation between columns of the signature map constructed from an optimal placement of 19 PMUs on the 39-bus system. The placement is generated by minimizing the average mutual coherence of the signature map using a genetic algorithm. Only correlations higher than 0.9 are plotted.}}
+\label{ch5:fig:best_correlation_heatmap}
+\end{figure}
+
+
+\subsection{Additional Identification Results} % (fold)
+\label{sub:additional_identification_results}
+
+Additional results of the proposed method's identification performance are reported here. 
+
+\subsubsection{Average Performance}
+
+The average identification performance of the proposed method and other methods under comparison for single-line outages with 75\% PMU coverage is shown in Fig. \ref{ch5:fig:single_outage_average_29pmus}. 
+% Single outage with 75% coverage
+\begin{figure}[!th]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{single_outage_average_29pmus}}
+\caption{\textit{Box-plots of single-line outage identification results for DC-based, correlation-based, and the proposed method. Results are based on 200 random simulation runs under a 75\% PMU coverage in the New England 39-bus system. Each method has two sets of results: accuracy of the original identification and of that augmented with MDCs.}}
+\label{ch5:fig:single_outage_average_29pmus}
+\end{figure}
+
+The average identification performance of the proposed method and other methods under comparison for double-line outages with 25\% PMU coverage is shown in Fig. \ref{ch5:fig:double_outage_average_10pmus} and 75\% PMU coverage in Fig. \ref{ch5:fig:double_outage_average_29pmus}.
+% Double outage with 25% coverage
+\begin{figure}[!th]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{double_outage_average_10pmus}}
+\caption{\textit{Box-plots of double-line outage identification results for DC-based, correlation-based, and the proposed method. ``All correct'' (top) and ``half correct'' (bottom) results are based on 200 random simulation runs under a 25\% PMU coverage in the New England 39-bus system. Each method has two sets of results: accuracy of the original identification and of that augmented with MDCs.}}
+\label{ch5:fig:double_outage_average_10pmus}
+\end{figure}
+% Double outage with 75% coverage
+\begin{figure}[!th]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{double_outage_average_29pmus}}
+\caption{\textit{Box-plots of double-line outage identification results for DC-based, correlation-based, and the proposed method. ``All correct'' (top) and ``half correct'' (bottom) results are based on 200 random simulation runs under a 75\% PMU coverage in the New England 39-bus system. Each method has two sets of results: accuracy of the original identification and of that augmented with MDCs.}}
+\label{ch5:fig:double_outage_average_29pmus}
+\end{figure}
+
+\clearpage
+\subsubsection{Effect of Minimal Diagnosable Cluster}
+
+The impact of the MDC correlation threshold on the outage identification accuracy and the proportion of single-element MDCs is reported in Table \ref{ch5:tab:impact_mdc_threshold_10pmus} for 25\% PMU coverage and in Table \ref{ch5:tab:impact_mdc_threshold_29pmus} for 75\% PMU coverage. 
+\begin{table}[!th]
+\caption{Impact of Minimal Diagnosable Cluster Threshold on Identification Precision-Accuracy Trade-off Using Lasso+MDC Under 25\% PMU Coverage}
+\label{ch5:tab:impact_mdc_threshold_10pmus}
+\centering
+\begin{tabular}{llll}
+\hline
+\hline
+Threshold ($\rho^*$)  & Single-element MDC (\%) & Single-line & Double-line \\
+\hline
+0.80 & 0.12 (0.04) & 0.88 (0.09) & 0.54 (0.09) \\
+0.84 & 0.17 (0.05) & 0.89 (0.08) & 0.50 (0.09) \\
+0.88 & 0.23 (0.05) & 0.87 (0.08) & 0.46 (0.09) \\
+0.93 & 0.31 (0.06) & 0.85 (0.08) & 0.41 (0.09) \\
+0.95 & 0.35 (0.06) & 0.86 (0.09) & 0.41 (0.11) \\
+0.98 & 0.39 (0.06) & 0.84 (0.09) & 0.38 (0.11) \\
+0.99 & 0.49 (0.07) & 0.78 (0.09) & 0.29 (0.10) \\
+\hline 
+\end{tabular}
+\end{table}
+
+\begin{table}[!th]
+\caption{Impact of Minimal Diagnosable Cluster Threshold on Identification Precision-Accuracy Trade-off Using Lasso+MDC Under 75\% PMU Coverage}
+\label{ch5:tab:impact_mdc_threshold_29pmus}
+\centering
+\begin{tabular}{llll}
+\hline
+\hline
+Threshold ($\rho^*$)  & Single-element MDC (\%) & Single-line & Double-line \\
+\hline
+0.80 & 0.57 (0.05) & 0.98 (0.03) & 0.79 (0.06) \\
+0.84 & 0.62 (0.06) & 0.99 (0.03) & 0.79 (0.03) \\
+0.88 & 0.71 (0.06) & 0.98 (0.03) & 0.79 (0.04) \\
+0.93 & 0.77 (0.06) & 0.98 (0.03) & 0.79 (0.05) \\
+0.95 & 0.78 (0.06) & 0.97 (0.03) & 0.79 (0.04) \\
+0.98 & 0.84 (0.06) & 0.96 (0.02) & 0.78 (0.04) \\
+0.99 & 0.86 (0.06) & 0.95 (0.03) & 0.76 (0.05) \\
+\hline 
+\end{tabular}
+\end{table}
+
+\newpage
+\subsubsection{Effect of Measurement Noise}
+
+The performance of the proposed method under different measurement noise levels is reported in Fig. \ref{ch5:fig:impact_noise_10pmus} for 25\% PMU coverage and in Fig. \ref{ch5:fig:impact_noise_29pmus} for 75\% PMU coverage. 
+\begin{figure}[!th]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{impact_noise_10pmus}}
+\caption{\textit{Impact of measurement noise on identification performance of the proposed method under a 25\% PMU coverage. Performance using data with noise standard deviation varying from 0\% to 10\% of $|\Delta\boldsymbol{\theta}|$ is reported by median accuracy of single- and double-line outages using Lasso and Lasso+MDC. }}
+\label{ch5:fig:impact_noise_10pmus}
+\end{figure}
+
+\begin{figure}[!th]
+\centering
+\includegraphics[width=1\linewidth]{\Pic{pdf}{impact_noise_29pmus}}
+\caption{\textit{Impact of measurement noise on identification performance of the proposed method under a 75\% PMU coverage. Performance using data with noise standard deviation varying from 0\% to 10\% of $|\Delta\boldsymbol{\theta}|$ is reported by median accuracy of single- and double-line outages using Lasso and Lasso+MDC. }}
+\label{ch5:fig:impact_noise_29pmus}
+\end{figure}
+
+% subsection additional_identification_results (end)

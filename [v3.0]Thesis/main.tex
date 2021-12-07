@@ -1,0 +1,56 @@
+%%% enable "DoubleSided" for paper-based submission, i.e. printing, and 
+%%% remove it for the final submission, i.e. electronic thesis
+%\newcommand*{\DoubleSided}{} 
+
+\input{_global_settings.tex}
+
+\begin{document}
+
+\title{Power System Transmission Line Outage Detection And Identification: A Physics-informed Data-driven Approach}
+
+\author{Yang Xiaozhou}
+\prevdegrees{%
+  B.Eng., National University of Singapore}
+\degree{Doctor of Philosophy}
+\field{Industrial Engineering}
+\degreeyear{2021}
+\supervisor{Associate Professor Chen Nan}
+
+% only involve the examiners in the final submission
+% \examiners{%
+%   Assistant Professor Liu Yang \\
+%   Associate Professor Poh Kim Leng}
+
+\maketitle
+
+\declaredate{Aug 2021}
+\declaresign{\RootPicDir /signature.png} % remove this if you prefer to sign physically
+\declarationpage
+
+\begin{frontmatter}
+  % \dedicate{To my loved ones}
+  \input{chapters/acknowledgments.tex}
+  \tableofcontents 
+  \input{chapters/abstract.tex}
+  \listoffigures
+  \listoftables
+\end{frontmatter}
+
+\input{chapters/1_introduction.tex}
+\input{chapters/2_literature.tex}
+\input{chapters/3_ps_background.tex}
+\input{chapters/4_detection_ac.tex}
+\input{chapters/5_detection_dae.tex}
+\input{chapters/6_identification.tex}
+\input{chapters/7_conclusion.tex}
+
+\bookmarksetup{startatroot}
+\printbibliography[heading=bibintoc]
+
+\appendix
+\input{chapters/app_detection_ac.tex}
+\input{chapters/app_detection_dae.tex}
+\input{chapters/app_identification.tex}
+
+
+\end{document}

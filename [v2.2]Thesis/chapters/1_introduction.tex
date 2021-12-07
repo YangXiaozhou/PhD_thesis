@@ -1,0 +1,178 @@
+\SetPicSubDir{1_introduction}
+
+\chapter{Introduction}
+\label{ch:introduction}
+\vspace{2em}
+
+% Overview of critical infrastructures
+
+Critical infrastructures (CIs) are essential to lives, livelihoods, and the proper functioning of societies. CIs are networks of inter- or independent manufactured systems and processes that produce and distribute a continuous flow of essential goods and services \cite{ellis1997report}. Five main types of CIs are electrical power systems, gas networks, water networks, transportation networks, and telecommunication systems. They have many common characteristics. For example, they are networks with many nodes and links, span extensively in geographical scale, and have developed capabilities for near real-time monitoring \cite{guikema2009natural}.
+
+The central theme of this thesis revolves around electrical power systems, in particular, novel methods for their protection. Electricity is needed in almost every aspect of modern society. It is particularly critical as other CIs are increasingly reliant on it as an input. Traditional power systems consist of three functional parts: generation, transmission, and distribution. The first part generates electrical power to meet the overall demand. Power is then delivered through loss-minimizing transmission lines to downstream areas. Finally, end consumers such as residential and office buildings receive usable power supply via distribution systems.
+
+% Complex power systems
+To ensure a continuous supply of high-quality electricity, power system operators work around the clock to keep the system running smoothly. However, this is not an easy feat. Power systems are highly complex because of the extensive geographical scale, fast dynamics, and high operational standards. A real-world power system typically spans across multiple states in the United States or cities and countries in Europe’s case. Within such a system, a plethora of dynamics are always in play. Thousands of power generators, transformers, electric lines, and other components could be interacting with each other at any moment. Three major power grids of the United States consist of 275,000 kilometers of high-voltage transmission lines and over nine million kilometers of low-voltage distribution lines; in Europe, four major grids are comprised of four million transformers and ten million kilometers of distribution lines. At the same time, the integration of distributed energy resources, smaller power sources such as batteries and renewable energy sources, introduces increasing volatility to modern power systems~\cite{amin2008challenges}.
+
+% Motivation for line outage detection and identification research
+\section{Motivation}
+
+% Broad overview of the power system, the task of operators and the challenges
+
+Ensuring a reliable electricity supply is a challenging task.  Fast and accurate abnormal event detection and identification (D\&I) is necessary to contain system failures in time and minimize the impact of such events. Abnormal events in power systems create disturbances that are different from a normal operating condition. Depending on the cause and duration, such disruptions may or may not lead to acute or cascading failures. Given the complexity of the system, there are many types of disturbances that could happen \cite{seymour2005seven}. Among them, power transmission line outage receives a significant amount of attention from both the research community and the industry. Power line outages can frequently occur due to adverse weather conditions, component wear and tear, vandalism, or other reasons. The increased research activities in power line outage D\&I can be attributed to two reasons. One is the urgent need to improve system operators’ real-time situational awareness. On the other hand, the emergence of phasor measurement unit (PMU) technology makes numerous real-time monitoring and control applications possible.
+
+\subsection{Real-time Situational Awareness}
+
+% Real-time situational awareness
+Real-time situational awareness about the system, e.g., changes in operating conditions and external system contingencies, enables system operators to identify and respond to abnormal events promptly~\cite{kezunovic2013role}. From a contingency point of view, delayed information regarding system faults might allow localized faults to cascade into large-scale blackouts~\cite{Aminifar2014}. For example, one of the common contributing factors of the 2003 Northeast and 2011 Southwest blackout was that the operators were not alerted in time about external outage contingencies, e.g., a critical transmission line tripping~\cite{Johnson2000}. One of the challenges about real-time monitoring is that line outage dynamics can manifest in a time scale of milliseconds~\cite{Milano2010power}. The traditional supervisory control and data acquisition (SCADA) system cannot capture these dynamics since it reports at a rate of one measurement every several seconds~\cite{pignati2015real}.
+
+
+\subsection{Emergence of Phasor Technology}
+% What PMUs are
+Synchrophasors are time-synchronized numbers representing both the magnitude and phase angle of the sine waves found in electricity, e.g., voltage phasor or current phasor. PMUs are devices capable of recording such synchrophasor samples when installed across the power grid with high precision, high fidelity, and GPS time stamps \cite{Aminifar2014}. An industry-grade PMU can measure voltage phasors on the bus with a total vector error of less than 1\% and report 30 to 60 samples per second. The rising prevalence of PMUs makes numerous real-time monitoring, protection, and control applications possible since they can measure system states at a much higher frequency than traditional SCADA systems. As a result, many consider PMU technology as the key to grid modernization. This is also in line with the smart grid vision that calls for better observability, controllability, and operational flexibility \cite{Panteli2015}. 
+
+Consequently, there is a large body of research works on PMU and their application in power systems. PMU technologies are actively studied for power oscillation monitoring, abnormal event detection, and dynamic state and parameter estimation. According to the excellent review paper \cite{Aminifar2014}, in their nine categories of PMU-related power system research, there are about 500 papers published in Institute of Electrical and Electronics Engineers (IEEE) and Institution of Engineering and Technology (IET) journals over the 30 years before 2014. The number is seen growing at an exponential rate recently. Readers can refer to \cite{Aminifar2014} for a comprehensive review of PMU applications in power systems.
+
+% \autoref{intro:fig:vege} 
+
+\section{Challenges}
+However, several challenges need to be addressed before realizing the full potential of PMU technology for line outage D\&I. 
+% 1. Real-time computational challenge
+One is the real-time computational challenge. As mentioned, outage D\&I is most wanted for enhancing operators’ real-time awareness. Consequently, a common goal for any D\&I scheme is to keep computational cost low enough for real-time processing and extracted information useful enough for analytics.
+% scalability of the scheme for realistically-sized system
+In particular, PMU’s high sampling rate means that data processing has to be fast. Furthermore, a realistic power system usually contains hundreds of lines and substations. Therefore, the proposed D\&I scheme must be efficient to handle real-time processing of fast streaming data and scalable to large dimensions.
+
+% potentially huge solution space for identification
+Also, a specific challenge for outage line identification is the inherent combinatorial nature of potential outage locations. An outage can happen at one or multiple transmission lines; the total number is in general not known a priori. For example, for a system with $L$ transmission lines, the solution space for identification consists of $2^L$ location combinations. An exhaustive search is only possible for small systems. The proposed scheme has to overcome this challenge for any realistic power system implementation.
+
+
+% 2. Limited sensor deployment challenge 
+Another challenge for line outage D\&I is that sensor deployment is limited in number. 
+% must consider limited sensor due to budget and system coupling
+PMU is the foundation for many D\&I schemes. However, PMUs are only progressively adopted by energy companies. Installing PMUs also means the whole data communication, processing, and storage infrastructure behind the technology, which is expensive. Separately, there have been many research works suggesting a full PMU deployment is not needed for many applications~\cite{aminifar2014synchrophasor}. Therefore, when designing a D\&I scheme, one must consider a limited PMU deployment in the system, i.e., some parts are not observable.
+
+% detection need to be robust to sensor locations
+Therefore, a limited PMU deployment, in terms of the number and location, impacts the outage detection scheme’s effectiveness. In particular, line outages that happen far away from buses with PMUs would register mild signals in the data, leading to a longer detection delay or missed detection~\cite{yang2020control}. It remains a challenge to design a detection scheme robust to the location of the PMUs and outages. 
+
+% identification need to overcome ambiguity due to limited sensor
+On the other hand, a limited coverage also leads to increased identification difficulty. Pre- and post-outage states at different parts of the system are needed to discriminate outages of one location from another. Having unobserved buses might lead to the signatures of some outages being missed out. This loss of information might lead to some outages of different locations being indistinguishable from one another~\cite{Wu2015,Costilla-Enriquez2019,yang2021particle}. Hence, an effective outage identification scheme must overcome the ambiguity issue caused by a limited PMU deployment.
+
+
+
+\section{State of the Art}
+
+The state-of-the-art research work in power system real-time line outage detection and identification using PMU data is reviewed in this section. 
+
+\subsection{Outage Detection} % (fold)
+\label{sub:outage_detection}
+
+Research that deals with detecting a line outage as fast as possible after it happened can be summarized from two aspects: the approach and the type of system dynamics considered. Outage detection research by their approach is first reviewed. Then, from the perspective of system dynamics, current work is examined for further research gaps. Finally, research work that focuses on outage line identification is reviewed.
+
+\subsubsection{By Approach} % (fold)
+\label{ssub:by_approach}
+
+Most works of line outage detection using PMU data can be classified by the two approaches taken. One is a data-driven approach where no or very little physical knowledge about the system is required~\cite{Xie2014, Rafferty2016, Hosur2019}. On the other hand, many take a hybrid approach where first-principle models are incorporated with data-driven methods~\cite{Jamei2016, Jamei2017a, ardakanian2017event, Ardakanian2019a, Tate2008, tate2009double, dai2020line,Chen2016, Rovatsos2017}. 
+
+\paragraph{Data-driven Approach}
+% Approximation error based on PCA of frequency and voltage data
+Authors in \cite{Xie2014} focus on analyzing the underlying dimensionality of the raw PMU data obtained. Using projection by principal component analysis (PCA), they then build a lower-dimensional representation of observable bus states from available PMU data under an outage-free condition~\cite{Xie2014}. An event indicator is constructed based on the reconstruction error between the representation and the actual measurements. 
+% Control charts based on PCA of frequency difference data
+Similarly, using a moving-window PCA on normal condition system-wide frequency data, Rafferty $\etal$ design a Hotelling’s $T^2$ control chart to detect and classify multiple types of abnormal frequency events~\cite{Rafferty2016}. While many works focus on the detection of a single event, this work considers detecting cascading failures where a series of disruptive events happen in a short time window. They investigated the ability of the proposed method to identify both simulated and real cascading events such as generation dip followed by a loss of load, multiple islanding from line tripping events, and short circuit event followed by an islanding event.
+
+% Null space approximation error monitoring based on system identification
+Hosur and Duan proposed constructing an observation matrix based on the frequency difference between buses under a normal condition by modeling the network as a linear time-invariant (LTI) system~\cite{Hosur2019}. An alarm is raised whenever the underlying null space of the observation matrix changes due to different types of events, such as topology change or forced oscillation. The method is not limited to line outages but requires a window of samples to reflect a null space change. 
+
+Without a model for the power system based on physical laws, these data-driven schemes are flexible enough to detect both outages and other abnormal events. However, they often face difficulties when the events have a low signal-to-noise ratio, e.g., outages with mild phase angle disturbances. On the other hand, the hybrid approach augments PMU data with physical system information to improve the detection performance under such conditions.
+
+\paragraph{Hybrid Approach}
+% Using Ohm's law, monitoring by rank-1 approximation error of I,V correlation matrix
+One group of work that takes a hybrid approach to outage detection makes use of the Ohm’s law, which relates voltage, current, and line admittance. Jamei $\etal$ show that the correlation matrix between voltage and current measurements of a pair of buses has rank one under normal conditions~\cite{Jamei2016,Jamei2017a}. A cumulative sum (CUSUM) control chart is then set up to monitor the approximation error based on the rank-1 assumption. An outage alarm is raised once the error deviates significantly from zero. The authors devised both a local and central rule for abnormal event detection. The formulation also considers the unique condition of unbalanced phases in a distribution grid. However, currents and voltages at both ends of the line are assumed to be known. Also, the focus of the detection scheme is on deriving the signal without a systematic approach to designing a monitoring scheme that balances detection speed and false alarm rate. 
+% Using Ohm's law, monitoring by admittance matrix recovery through lasso
+Also based on Ohm’s law, Ardakanian $\etal$ focus on monitoring the discrepancy between measured and computed quasi-steady-state current phasors using the recovered admittance matrix~\cite{ardakanian2017event,Ardakanian2019a}. The post-outage system admittance matrix is recovered from PMU data by solving an inverse power flow and system identification problem. Since the method is based on the admittance matrix, it has the potential to be extended to detecting other disruptive events which induce a change in the matrix.
+
+A separate line of work makes use of the direct current (DC) power flow model, which describes the relationship between substation power injections, voltage, and line admittance~\cite{Chen2016,Babakmehr2016}. In general, they focus on monitoring the pre- and post-outage steady-state voltage phase angle difference. Outage detection is then formulated as a quickest change detection problem. The detection is done by sequential likelihood ratio testing. 
+This line of work does not require all buses to be monitored by a PMU. However, the steady-state approximation would not be sufficient at describing the actual system dynamic behavior following an outage. 
+% subsubsection by_approach (end)
+
+Therefore, existing methods do not consider the transient dynamics following an outage or require a full PMU deployment. There is minimal work on detection schemes that consider unobserved buses and exploit the system's transient response to an outage for faster detection.
+
+\subsubsection{By System Dynamics} % (fold)
+\label{ssub:by_dynamics}
+
+In addition to the usage of physical system models, most state-of-the-art works on outage detection can also be categorized by the type of power system transient dynamics, the evolution of system states following a disturbance, considered in their problem formulation. A review from this perspective allows new research direction to be discovered.
+
+\paragraph{Steady State}
+The first group models power systems based on the quasi-steady-state assumption where no transient dynamics are considered~\cite{Tate2008, tate2009double, babakmehr2015application,Chen2016, ardakanian2017event,Ardakanian2019a}. Their detection methods assume that the system is in a quasi-steady-state both before and after the outage. Under this assumption, the DC power flow model, which simplifies many details of the system, is usually used as the starting point for detection scheme design. However, transient dynamics can often last up to several seconds and are non-negligible in real-time operations~\cite{Glover2012}. Therefore, this approach may not be adequate at describing the actual system behavior. 
+
+\paragraph{Approximate Dynamics}
+The second group relaxes the quasi-steady-state assumption and attempts to account for the post-outage transient dynamics. That means the voltage and current profiles of buses and transmission lines are assumed to be time-variant rather than static, especially after an outage. 
+
+Building on the sequential likelihood ratio testing approach in~\cite{Chen2016}, Rovatsos $\etal$ modeled the dynamic evolution of post-outage voltage phase angles using a series of time-dependent participation factor matrices. The matrices quantify the impact of an outage on system bus voltage phase angles based on topology and current operating states~\cite{Rovatsos2017}. However, it is not clear how each of the matrices could be obtained given a new system design and further investigation is needed. Similarly, using voltage angles, a generalized likelihood ratio-based detection scheme is developed using the AC power flow model in Chapter \ref{ch:detection_using_approximate_dynamics} of this thesis. 
+
+Separately, monitoring is also done on low-dimensional subspaces derived from PMU measurements that capture post-outage transient dynamics. Methods such as principal component analysis (PCA)~\cite{Xie2014}, moving-window PCA~\cite{Rafferty2016}, and hidden Markov model (HMM)~\cite{Huang2016b} are used. Jamei $\etal$ proposed to monitor the correlation matrix obtained from adjacent bus voltage and current phasors~\cite{Jamei2017a}; Hosur and Duan proposed to monitor that of the observation matrix obtained during outage-free operation~\cite{Hosur2019}. 
+
+Overall, these methods can capture post-outage system dynamics in a more realistic way than those assuming quasi-steady-state operations. However, all of them rely on system algebraic variables, e.g., bus voltage and current phasors to model the dynamics. System transient dynamics after an outage come from power generators \cite{Glover2012}. Therefore, power generator state variables can better characterize the system's transient response to the power imbalance created by the outage.
+
+\paragraph{Generator Dynamics}
+Based on the generator dynamics insight, the third group models the power system as a dynamical system, utilizing both the measurable algebraic variables and hidden generator state variables. The hope is that the addition of generator information could help better identify line outages. Using the swing equation, a second-order differential equation describing the dynamics of generators, Pan $\etal$ formulated outage diagnosis as a sparse recovery problem solved by an optimization algorithm~\cite{Pan2015a}. Similarly, a visual observer network is constructed using the swing equation to monitor line admittance changes by a parameter identification method~\cite{Yang2016b}. However, both of these works focus on the outage diagnosis problem, i.e., outage line identification and post-outage parameter estimation. However, a systematic detection scheme is the prerequisite for such tasks and needs to be developed.
+% subsubsection by_dynamics (end)
+
+Therefore, there is limited work on systematic line outage detection  considering generator dynamics in a partially observed network. No work has been done to integrate generator information and power flow algebraic variable information for faster and more reliable outage detection.
+
+
+% subsection outage_detection (end)
+
+\subsection{Outage Identification} % (fold)
+\label{sub:outage_identification}
+Early detection of line outage may not lead to better system protection if the location of the outage line(s) are not known. Research on outage lines identification has also thrived in the past twenty years, mainly taking three directions. Research work that focuses on identifying outage lines by estimating post-outage line parameters is reviewed first. Then, those with a machine learning approach and expected phase angle change approach are reviewed.
+
+% Line parameter change diagnostics
+\paragraph{Parameter Recovery Approach}
+Line outage identification, in general, can be formulated as a parameter change identification problem. An outage of line l corresponds to the change when the line admittance of $\ell$ drops to zero. When post-outage system parameters are estimated, a comparison with pre-outage baseline information could reveal outage locations. Some attempted to solve this problem by recovering changed line parameters. Yu $\etal$ use the power flow equations to formulate line parameters as unknown regression coefficients and recover them via the total least squares method in~\cite{Yu2018} and considering changing baseline conditions~\cite{Yu2019}. Another approach focuses on the system admittance matrix, which depends on line-bus connection information, and recovers the matrix elements via matrix decomposition and adaptive lasso~\cite{Babakmehr2016,Ardakanian2019a}. 
+
+These methods can both locate multiple line outages and recover post-outage system parameters. However, they either require a full PMU deployment or smart meter measurements, e.g., power injection and voltage measurements for the power flow approach, current and voltage measurements for the admittance matrix approach at all buses.
+
+% Machine learning-based approach
+\paragraph{Machine Learning Approach}
+However, it is more realistic to assume only part of the system is observable by PMUs or smart meters, as mentioned in the challenge section. Under this assumption, researchers mainly seek to solve line outage identification problems, i.e., locate outage lines. Two main approaches are taken. The first, machine learning-based approach, is reviewed here. This line of work leverages easily accessible simulated power system outage data, extracts valuable information from them, and trains an outage classifier in a supervised learning setting. The classifier then identifies the most likely outage locations when given a new set of system data. Classical supervised learning techniques such as multinomial logistic regression classifiers are used~\cite{Garcia2016,Kim2018}. Recently, convolutional and Bayesian neural networks, a family of versatile machine learning techniques, are proposed to identify tripped lines~\cite{Li2019a,Zhao2020}. 
+
+The machine learning-based approach exploits the ability of these algorithms to learn an excellent representation of line outages. They are powerful at locating multiple line outages with limited PMUs. However, their performance depends on generalizable and usually massive training data.
+
+% Expected angle change approach
+\paragraph{Expected Angle Change Approach}
+The second approach that does not demand a full PMU deployment on the power system is the expected voltage phase angle change formulation. Different from the machine learning approach, this line of work does not depend on training data either. Instead, well-known physical laws governing power systems are utilized to construct a ``dictionary'' of how voltage phase angles might change following any outage. That knowledge is then used to decide where outages might have happened after collecting post-outage system data. This dictionary of patterns of angle change is usually based on either the DC power flow model~\cite{Tate2008,tate2009double,Zhu2012,Emami2013,Chen2014,Wu2015} or the AC model~\cite{Costilla-Enriquez2019}. Outage line identification is then formulated into an unknown sparse vector recovery problem or a pattern-matching problem. 
+For example, the outage status of all lines is formulated as an unknown vector recovered by optimization methods such as orthogonal matching pursuit, mixed-integer programming, cross-entropy optimization, and matrix decomposition~\cite{Zhu2012, Emami2013,Chen2014,Wu2015}. Also, Tate and Overbye and Enriquez $\etal$ used the correlation between measurement data and expected phase angle data to identify the most likely outage locations~\cite{Tate2008,Costilla-Enriquez2019}. 
+
+However, the usage of the DC power flow model potentially creates system representations with fidelity inadequate for accurate single- and multiple-line outage identification. All but Enriquez $\etal$ consider the AC power flow model. However, their approach requires both voltage and current information. Overall, despite demonstrated effectiveness by the above works, the identification performance degrades significantly when a limited number of PMUs are available or when multiple-line outages are considered. 
+
+% subsection outage_identification (end)
+
+% Current gaps
+Therefore, given an outage detection timestamp, multiple-line outage identification problem remains difficult when (1) massive generalizable training data is not available or feasible, (2) only a portion of the system buses are equipped with PMUs, (3) only bus voltage phasor information is used.  
+
+
+\section{Thesis Organization}
+
+% Organization
+This thesis is devoted to developing novel power system line outage D\&I methods by addressing previous sections' challenges and research gaps. In particular, the rest of this thesis is organized as follows.
+
+Chapter \ref{ch:ps_background} gives background information on how power systems as complex networks could be modeled and simulated. This information will be repeatedly referenced in the rest of this thesis. Specifically, the section introduces the AC power flow model that describes system algebraic states and relevant power system physical quantities. Then, the dynamic simulation procedure of power systems and the open-source software package used to do it are introduced. These describe how line outage data are simulated and obtained using standard IEEE test power systems.
+
+
+% First work
+% Our approach and contribution
+Chapter \ref{ch:detection_using_approximate_dynamics} describes a novel real-time dynamic outage detection scheme based on the AC power flow model and statistical change detection theory, using voltage phase angle data collected from a limited number of PMUs. The proposed method can capture system dynamics since it retains the time-variant and nonlinear nature of the power system. The method is computationally efficient and scales to large and realistic networks. Extensive simulation studies on IEEE 39-bus and 2383-bus systems demonstrated the effectiveness of the proposed method.
+
+% Second work
+In Chapter \ref{ch:detection_using_generator_dynamics}, a unified detection framework that utilizes both generator dynamic states and nodal voltage information is proposed. The inclusion of generator dynamics makes detection faster and more robust to a priori unknown outage locations. The superior performance is demonstrated using the IEEE 39-bus test system. In particular, the scheme achieves an over 80\% detection rate for 80\% of the lines, and most outages are detected within 0.2 seconds. 
+% Immediate and wider implication
+The new approach could be implemented to improve system operators' real-time situational awareness by detecting outages faster and providing a breakdown of outage signals for diagnostic purposes.
+
+% Third work 
+% Overall contributions
+% Our approach
+Chapter \ref{ch:identification} describes a new framework of multiple-line outage identification using partial nodal voltage measurements. Using the AC power flow model, voltage phase angle signatures of outages are extracted and used to group lines into minimal diagnosable clusters. Identification is then formulated into an underdetermined sparse regression problem solved by lasso. Tested on IEEE 39-bus system with 25\% and 50\% PMU coverage, the proposed identification method is 93\% and 80\% accurate for single- and double-line outages. 
+% Why does it matter? Immediate and wider implication
+This study suggests that the AC power flow is better at capturing outage patterns, and sacrificing a moderate amount of precision could yield substantial improvement in identification accuracy. These findings could contribute to developing future control schemes that help power systems resist and recover from outage disruptions in real-time.
+
+
+Chapter \ref{ch:conclusion} concludes this thesis and discusses future research directions.
