@@ -1,0 +1,19 @@
+\SetPicSubDir{3_detection_ac}
+
+\chapter{Unstable Post-Outage System}
+\label{ch3:sec:appendix}
+\vspace{2em}
+
+A simulation example is shown here to illustrate the working of the detection scheme proposed in Chapter \ref{ch:detection_using_approximate_dynamics} when the outage creates an unstable and transient system. In the 39-bus system, line 37 outage creates large disturbances throughout the system, as shown in Figure \ref{ch3:fig:line_37_outage}. From the onset of the outage to the end of the simulation, voltage phase angles at most buses show no significant sign of stabilization. The detection scheme is able to detect the outage immediately, as shown in Figure \ref{ch3:fig:line_37_detection}. In this case, the monitoring statistic records a significantly large value, indicating that the strength of the signals is strong. 
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{\Pic{pdf}{line_37_outage}}
+\caption{\textit{The progression of bus voltage phase angles after the outage of line 37. Each line represents the voltage phase angles from one of the buses.}}
+\label{ch3:fig:line_37_outage}
+\end{figure}
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{\Pic{pdf}{line_37_detection}}
+\caption{\textit{The progression of the monitoring statistic for line 37 outage.}}
+\label{ch3:fig:line_37_detection}
+\end{figure}
